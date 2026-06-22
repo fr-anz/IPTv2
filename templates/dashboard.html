@@ -87,12 +87,12 @@ Analytics{% endblock %} {% block content %}
 </section>
 
 <section class="panel">
-	<h2>Cleaned Data Preview</h2>
+	<h2>Data Preview</h2>
 	<div class="table-scroll">
 		<table>
 			<thead>
 				<tr>
-					{% for column in columns %}
+					{% for column in columns if column not in ["description", "is_outlier", "month_name"] %}
 					<th>{{ column }}</th>
 					{% endfor %}
 				</tr>
@@ -100,7 +100,7 @@ Analytics{% endblock %} {% block content %}
 			<tbody>
 				{% for row in cleaned_preview %}
 				<tr>
-					{% for column in columns %}
+					{% for column in columns if column not in ["description", "is_outlier", "month_name"] %}
 					<td>{{ row[column] }}</td>
 					{% endfor %}
 				</tr>
