@@ -1,143 +1,112 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Dashboard | Personal Finance
+Analytics{% endblock %} {% block content %}
 
-{% block title %}Dashboard | Personal Finance Analytics{% endblock %}
+<section class="metric-grid" aria-label="Key finance metrics">
+	<article class="metric-card">
+		<span>Total Income</span>
+		<strong>{{ "{:,.2f}".format(metrics.total_income) }}</strong>
+	</article>
+	<article class="metric-card">
+		<span>Total Expenses</span>
+		<strong>{{ "{:,.2f}".format(metrics.total_expense) }}</strong>
+	</article>
+	<article class="metric-card">
+		<span>Net Savings</span>
+		<strong>{{ "{:,.2f}".format(metrics.net_savings) }}</strong>
+	</article>
+	<article class="metric-card">
+		<span>Savings Rate</span>
+		<strong>{{ "{:,.2f}".format(metrics.savings_rate) }}%</strong>
+	</article>
+	<article class="metric-card">
+		<span>Transactions</span>
+		<strong>{{ metrics.total_transactions }}</strong>
+	</article>
+	<article class="metric-card">
+		<span>Date Range</span>
+		<strong>{{ metrics.date_range }}</strong>
+	</article>
+</section>
 
-{% block content %}
-  <section class="panel intro-panel">
-    <div>
-      <p class="eyebrow">Dataset loaded</p>
-      <h2>{{ source_name }}</h2>
-      <p>
-        This dashboard cleans the transaction dataset, computes descriptive statistics,
-        and generates charts for decision-making and expense monitoring.
-      </p>
-    </div>
-    <form class="upload-form" method="post" enctype="multipart/form-data">
-      <label for="dataset">Analyze another CSV with the same columns</label>
-      <div class="upload-row">
-        <input id="dataset" name="dataset" type="file" accept=".csv">
-        <button class="button" type="submit">Analyze</button>
-      </div>
-    </form>
-  </section>
+<section class="grid two-columns">
+	<article class="panel">
+		<h2>Insights and Recommendations</h2>
+	</article>
+</section>
 
-  <section class="metric-grid" aria-label="Key finance metrics">
-    <article class="metric-card">
-      <span>Total Income</span>
-      <strong>{{ "{:,.2f}".format(metrics.total_income) }}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Total Expenses</span>
-      <strong>{{ "{:,.2f}".format(metrics.total_expense) }}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Net Savings</span>
-      <strong>{{ "{:,.2f}".format(metrics.net_savings) }}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Savings Rate</span>
-      <strong>{{ "{:,.2f}".format(metrics.savings_rate) }}%</strong>
-    </article>
-    <article class="metric-card">
-      <span>Transactions</span>
-      <strong>{{ metrics.total_transactions }}</strong>
-    </article>
-    <article class="metric-card">
-      <span>Date Range</span>
-      <strong>{{ metrics.date_range }}</strong>
-    </article>
-  </section>
+<section class="chart-grid">
+	<article class="chart-panel">{{ charts.bar_chart | safe }}</article>
+	<article class="chart-panel">{{ charts.line_chart | safe }}</article>
+	<article class="chart-panel">{{ charts.pie_chart | safe }}</article>
+	<article class="chart-panel">{{ charts.histogram | safe }}</article>
+	<article class="chart-panel">{{ charts.payment_chart | safe }}</article>
+</section>
 
-  <section class="grid two-columns">
-    <article class="panel">
-      <h2>Cleaning Summary</h2>
-      <dl class="report-list">
-        <div><dt>Original rows</dt><dd>{{ cleaning_report.original_rows }}</dd></div>
-        <div><dt>Cleaned rows</dt><dd>{{ cleaning_report.cleaned_rows }}</dd></div>
-        <div><dt>Rows removed</dt><dd>{{ cleaning_report.removed_rows }}</dd></div>
-        <div><dt>Missing values filled</dt><dd>{{ cleaning_report.missing_values_filled }}</dd></div>
-        <div><dt>Duplicates removed</dt><dd>{{ cleaning_report.duplicates_removed }}</dd></div>
-        <div><dt>Invalid dates removed</dt><dd>{{ cleaning_report.invalid_date_rows_removed }}</dd></div>
-        <div><dt>Invalid amounts removed</dt><dd>{{ cleaning_report.invalid_amount_rows_removed }}</dd></div>
-        <div><dt>Invalid types removed</dt><dd>{{ cleaning_report.invalid_type_rows_removed }}</dd></div>
-        <div><dt>Text entries standardized</dt><dd>{{ cleaning_report.standardized_text_entries }}</dd></div>
-        <div><dt>Outliers capped</dt><dd>{{ cleaning_report.outliers_capped }}</dd></div>
-      </dl>
-    </article>
+<section class="grid two-columns">
+	<article class="panel">
+		<h2>Statistical Computations</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>Metric</th>
+					<th>Value</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for row in statistics_table %}
+				<tr>
+					<td>{{ row.metric }}</td>
+					<td>{{ "{:,.2f}".format(row.value) }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</article>
 
-    <article class="panel">
-      <h2>Insights and Recommendations</h2>
-      <ul class="insight-list">
-        {% for insight in insights %}
-          <li>{{ insight }}</li>
-        {% endfor %}
-      </ul>
-    </article>
-  </section>
+	<article class="panel">
+		<h2>Top Expense Categories</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>Category</th>
+					<th>Total</th>
+					<th>Share</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for row in category_summary %}
+				<tr>
+					<td>{{ row.category }}</td>
+					<td>{{ "{:,.2f}".format(row.total_amount) }}</td>
+					<td>{{ "{:,.2f}".format(row.share_of_expenses) }}%</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</article>
+</section>
 
-  <section class="chart-grid">
-    <article class="chart-panel">{{ charts.bar_chart | safe }}</article>
-    <article class="chart-panel">{{ charts.line_chart | safe }}</article>
-    <article class="chart-panel">{{ charts.pie_chart | safe }}</article>
-    <article class="chart-panel">{{ charts.histogram | safe }}</article>
-    <article class="chart-panel">{{ charts.payment_chart | safe }}</article>
-  </section>
-
-  <section class="grid two-columns">
-    <article class="panel">
-      <h2>Statistical Computations</h2>
-      <table>
-        <thead>
-          <tr><th>Metric</th><th>Value</th></tr>
-        </thead>
-        <tbody>
-          {% for row in statistics_table %}
-            <tr><td>{{ row.metric }}</td><td>{{ "{:,.2f}".format(row.value) }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </article>
-
-    <article class="panel">
-      <h2>Top Expense Categories</h2>
-      <table>
-        <thead>
-          <tr><th>Category</th><th>Total</th><th>Share</th></tr>
-        </thead>
-        <tbody>
-          {% for row in category_summary %}
-            <tr>
-              <td>{{ row.category }}</td>
-              <td>{{ "{:,.2f}".format(row.total_amount) }}</td>
-              <td>{{ "{:,.2f}".format(row.share_of_expenses) }}%</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </article>
-  </section>
-
-  <section class="panel">
-    <h2>Cleaned Data Preview</h2>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            {% for column in columns %}
-              <th>{{ column }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in cleaned_preview %}
-            <tr>
-              {% for column in columns %}
-                <td>{{ row[column] }}</td>
-              {% endfor %}
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
+<section class="panel">
+	<h2>Cleaned Data Preview</h2>
+	<div class="table-scroll">
+		<table>
+			<thead>
+				<tr>
+					{% for column in columns %}
+					<th>{{ column }}</th>
+					{% endfor %}
+				</tr>
+			</thead>
+			<tbody>
+				{% for row in cleaned_preview %}
+				<tr>
+					{% for column in columns %}
+					<td>{{ row[column] }}</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</section>
 {% endblock %}
