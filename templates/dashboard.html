@@ -1,42 +1,21 @@
 {% extends "base.html" %} {% block title %}Dashboard | Personal Finance
-Analytics{% endblock %} {% block content %}
-
-{% macro insight_cards(items) %}
-	{% for insight in items %}
-	<div class="insight-card">
-		<div class="insight-card-header">
-			<h3>{{ insight.title }}</h3>
-		</div>
-		<p><strong>Finding:</strong> {{ insight.finding }}</p>
-		<p><strong>Interpretation:</strong> {{ insight.interpretation }}</p>
-		<p><strong>Recommendation:</strong> {{ insight.recommendation }}</p>
-	</div>
-	{% endfor %}
+Analytics{% endblock %} {% block content %} {% macro graph_summary(summary) %}
+{% if summary.conclusion %}
+<div class="graph-summary-block">
+	<h3>Conclusion</h3>
+	<p>{{ summary.conclusion }}</p>
+</div>
+{% endif %}
+<div class="graph-summary-block">
+	<h3>Recommendation</h3>
+	<p>{{ summary.recommendation }}</p>
+</div>
 {% endmacro %}
 
 <section id="overview" class="dashboard-hero">
 	<div class="hero-copy">
-		<h1>Personal finance monitoring dashboard</h1>
-		<p>
-			{{ source_name }} is cleaned, analyzed, and summarized into cash-flow
-			metrics, category trends, and decision notes.
-		</p>
-		<div class="hero-meta">
-			<span>{{ metrics.date_range }}</span>
-			<span>{{ metrics.total_transactions }} cleaned transactions</span>
-			<span>{{ "Positive net savings" if metrics.net_savings >= 0 else "Negative net savings" }}</span>
-		</div>
+		<h1>Personal Finance Analytics</h1>
 	</div>
-	<form class="upload-form control-panel" method="post" enctype="multipart/form-data">
-		<label for="dataset">Replace dataset</label>
-		<input id="dataset" type="file" name="dataset" accept=".csv" />
-		<div class="upload-row">
-			<button class="button" type="submit">Analyze</button>
-			<a class="button secondary" href="{{ url_for('download_cleaned_dataset') }}"
-				>Download Cleaned CSV</a
-			>
-		</div>
-	</form>
 </section>
 
 <section class="metric-grid" aria-label="Key finance metrics">
@@ -66,401 +45,412 @@ Analytics{% endblock %} {% block content %}
 	</article>
 </section>
 
-<section class="grid two-columns decision-grid">
-	<article class="panel panel-lead">
-		<div class="section-heading">
-			<h2>Insights and recommendations</h2>
-		</div>
-		<div class="insight-stack">
-			{{ insight_cards(insights) }}
-		</div>
-	</article>
-
-	<article class="panel">
-		<div class="section-heading">
-			<h2>Dataset semantic audit</h2>
-		</div>
-		{% if semantic_audit.has_salary_expenses %}
-		<p class="warning-text">
-			Salary appears as an expense category in
-			{{ semantic_audit.salary_expense_count }} records totaling
-			{{ "{:,.2f}".format(semantic_audit.salary_expense_total) }}. It is
-			reported as-is and should be reviewed before interpreting category
-			behavior.
-		</p>
-		{% else %}
-		<p>No salary-as-expense issue was detected in the cleaned dataset.</p>
-		{% endif %}
-		<dl class="report-list">
-			<div>
-				<dt>Salary income records</dt>
-				<dd>{{ semantic_audit.salary_income_count }}</dd>
-			</div>
-			<div>
-				<dt>Salary income total</dt>
-				<dd>{{ "{:,.2f}".format(semantic_audit.salary_income_total) }}</dd>
-			</div>
-		</dl>
-	</article>
-</section>
-
 <section id="charts" class="dashboard-section">
-	<div class="section-heading">
-		<h2>Charts with graph-specific insight</h2>
-	</div>
-	<div class="chart-grid">
-	<article class="chart-panel">
-		<div class="chart-panel-header">
-			<div>
+		<div class="chart-grid">
+			<article class="chart-panel">
+				<div class="chart-panel-header">
+					<div>
+						<h2>Top expense categories</h2>
+					</div>
+				</div>
+				<div class="chart-frame">{{ charts.bar_chart | safe }}</div>
+				<div class="graph-insights">
+					{{ graph_summary(dashboard_summary.charts.top_expense_categories) }}
+				</div>
+			</article>
+			<article class="chart-panel chart-panel-wide">
+				<div class="chart-panel-header">
+					<div>
+						<h2>Monthly income, expenses, and net savings</h2>
+					</div>
+				</div>
+				<div class="chart-frame">{{ charts.line_chart | safe }}</div>
+				<div class="graph-insights">
+					{{ graph_summary(dashboard_summary.charts.monthly_trends) }}
+				</div>
+			</article>
+			<article class="chart-panel">
+				<div class="chart-panel-header">
+					<div>
+						<h2>Expense share by category</h2>
+					</div>
+				</div>
+				<div class="chart-frame">{{ charts.pie_chart | safe }}</div>
+				<div class="graph-insights">
+					{{ graph_summary(dashboard_summary.charts.expense_share_by_category) }}
+				</div>
+			</article>
+			<article class="chart-panel">
+				<div class="chart-panel-header">
+					<div>
+						<h2>Amount distribution</h2>
+					</div>
+				</div>
+				<div class="chart-frame">{{ charts.histogram | safe }}</div>
+				<div class="graph-insights">
+					{{ graph_summary(dashboard_summary.charts.transaction_amount_distribution) }}
+				</div>
+			</article>
+			<article class="chart-panel">
+				<div class="chart-panel-header">
+					<div>
+						<h2>Expense totals by payment method</h2>
+					</div>
+				</div>
+				<div class="chart-frame">{{ charts.payment_chart | safe }}</div>
+				<div class="graph-insights">
+					{{ graph_summary(dashboard_summary.charts.payment_method_expenses) }}
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section id="analysis" class="dashboard-section grid two-columns">
+		<article class="panel">
+			<div class="section-heading">
+				<h2>Statistical computations</h2>
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th>Metric</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in statistics_table %}
+					<tr>
+						<td>{{ row.metric }}</td>
+						<td>{{ "{:,.2f}".format(row.value) }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</article>
+
+		<article class="panel">
+			<div class="section-heading">
 				<h2>Top expense categories</h2>
 			</div>
-		</div>
-		<div class="chart-frame">{{ charts.bar_chart | safe }}</div>
-		<div class="graph-insights">
-			<h3>Graph Insight</h3>
-			{{ insight_cards(chart_insights.top_expense_categories) }}
-		</div>
-	</article>
-	<article class="chart-panel chart-panel-wide">
-		<div class="chart-panel-header">
-			<div>
-				<h2>Monthly income, expenses, and net savings</h2>
-			</div>
-		</div>
-		<div class="chart-frame">{{ charts.line_chart | safe }}</div>
-		<div class="graph-insights">
-			<h3>Graph Insight</h3>
-			{{ insight_cards(chart_insights.monthly_trends) }}
-		</div>
-	</article>
-	<article class="chart-panel">
-		<div class="chart-panel-header">
-			<div>
-				<h2>Expense share by category</h2>
-			</div>
-		</div>
-		<div class="chart-frame">{{ charts.pie_chart | safe }}</div>
-		<div class="graph-insights">
-			<h3>Graph Insight</h3>
-			{{ insight_cards(chart_insights.expense_share_by_category) }}
-		</div>
-	</article>
-	<article class="chart-panel">
-		<div class="chart-panel-header">
-			<div>
-				<h2>Amount distribution</h2>
-			</div>
-		</div>
-		<div class="chart-frame">{{ charts.histogram | safe }}</div>
-		<div class="graph-insights">
-			<h3>Graph Insight</h3>
-			{{ insight_cards(chart_insights.transaction_amount_distribution) }}
-		</div>
-	</article>
-	<article class="chart-panel">
-		<div class="chart-panel-header">
-			<div>
-				<h2>Expense totals by payment method</h2>
-			</div>
-		</div>
-		<div class="chart-frame">{{ charts.payment_chart | safe }}</div>
-		<div class="graph-insights">
-			<h3>Graph Insight</h3>
-			{{ insight_cards(chart_insights.payment_method_expenses) }}
-		</div>
-	</article>
-	</div>
-</section>
+			<table>
+				<thead>
+					<tr>
+						<th>Category</th>
+						<th>Total</th>
+						<th>Share</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in category_summary %}
+					<tr>
+						<td>{{ row.category }}</td>
+						<td>{{ "{:,.2f}".format(row.total_amount) }}</td>
+						<td>{{ "{:,.2f}".format(row.share_of_expenses) }}%</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</article>
+	</section>
 
-<section id="analysis" class="dashboard-section grid two-columns">
-	<article class="panel">
+	<section class="grid two-columns">
+		<article class="panel">
+			<div class="section-heading">
+				<h2>Cleaning Report</h2>
+			</div>
+			<dl class="report-list">
+				<div>
+					<dt>Original rows</dt>
+					<dd>{{ cleaning_report.original_rows }}</dd>
+				</div>
+				<div>
+					<dt>Cleaned rows</dt>
+					<dd>{{ cleaning_report.cleaned_rows }}</dd>
+				</div>
+				<div>
+					<dt>Removed rows</dt>
+					<dd>{{ cleaning_report.removed_rows }}</dd>
+				</div>
+				<div>
+					<dt>Missing values filled</dt>
+					<dd>{{ cleaning_report.missing_values_filled }}</dd>
+				</div>
+				<div>
+					<dt>Duplicates removed</dt>
+					<dd>{{ cleaning_report.duplicates_removed }}</dd>
+				</div>
+				<div>
+					<dt>Invalid amount rows removed</dt>
+					<dd>{{ cleaning_report.invalid_amount_rows_removed }}</dd>
+				</div>
+				<div>
+					<dt>Invalid date rows removed</dt>
+					<dd>{{ cleaning_report.invalid_date_rows_removed }}</dd>
+				</div>
+				<div>
+					<dt>Invalid type rows removed</dt>
+					<dd>{{ cleaning_report.invalid_type_rows_removed }}</dd>
+				</div>
+				<div>
+					<dt>Standardized text entries</dt>
+					<dd>{{ cleaning_report.standardized_text_entries }}</dd>
+				</div>
+				<div>
+					<dt>Salary expense records reviewed</dt>
+					<dd>
+						{{ cleaning_report.salary_expense_records_reviewed }}
+					</dd>
+				</div>
+				<div>
+					<dt>Salary records reclassified as income</dt>
+					<dd>
+						{{ cleaning_report.salary_records_reclassified_as_income
+						}}
+					</dd>
+				</div>
+				<div>
+					<dt>Salary records kept as expense</dt>
+					<dd>
+						{{ cleaning_report.salary_records_kept_as_expense }}
+					</dd>
+				</div>
+				<div>
+					<dt>Unknown categories inferred</dt>
+					<dd>{{ cleaning_report.unknown_categories_inferred }}</dd>
+				</div>
+				<div>
+					<dt>Unknown categories remaining</dt>
+					<dd>{{ cleaning_report.unknown_categories_remaining }}</dd>
+				</div>
+				<div>
+					<dt>Outliers capped</dt>
+					<dd>{{ cleaning_report.outliers_capped }}</dd>
+				</div>
+			</dl>
+			<p class="compact-text">
+				Engineered columns: {{ cleaning_report.engineered_columns |
+				join(", ") }}
+			</p>
+		</article>
+
+		<article class="panel">
+			<div class="section-heading">
+				<h2>Advanced Analysis</h2>
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th>Metric</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Monthly net cash-flow variance</td>
+						<td>
+							{{
+							"{:,.2f}".format(extended_metrics.monthly_net_variance)
+							}}
+						</td>
+					</tr>
+					<tr>
+						<td>Monthly net cash-flow standard deviation</td>
+						<td>
+							{{
+							"{:,.2f}".format(extended_metrics.monthly_net_standard_deviation)
+							}}
+						</td>
+					</tr>
+					<tr>
+						<td>Positive savings months</td>
+						<td>
+							{{ extended_metrics.positive_savings_months }} of {{
+							extended_metrics.total_months }} ({{
+							"{:,.2f}".format(extended_metrics.positive_savings_month_share)
+							}}%)
+						</td>
+					</tr>
+					<tr>
+						<td>Top 3 category concentration</td>
+						<td>
+							{{
+							"{:,.2f}".format(extended_metrics.top_three_category_concentration)
+							}}%
+						</td>
+					</tr>
+					<tr>
+						<td>Flagged transaction rate</td>
+						<td>
+							{{
+							"{:,.2f}".format(extended_metrics.outlier_transaction_rate)
+							}}%
+						</td>
+					</tr>
+					<tr>
+						<td>Expense mean-median gap</td>
+						<td>
+							{{
+							"{:,.2f}".format(extended_metrics.expense_mean_median_gap)
+							}}
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</article>
+	</section>
+
+	<section class="grid two-columns">
+		<article class="panel">
+			<div class="section-heading">
+				<h2>Monthly Summary</h2>
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th>Period</th>
+						<th>Income</th>
+						<th>Expense</th>
+						<th>Net</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in monthly_summary %}
+					<tr>
+						<td>{{ row.period }}</td>
+						<td>{{ "{:,.2f}".format(row.Income) }}</td>
+						<td>{{ "{:,.2f}".format(row.Expense) }}</td>
+						<td>{{ "{:,.2f}".format(row.net_savings) }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</article>
+
+		<article class="panel">
+			<div class="section-heading">
+				<h2>Payment Method Summary</h2>
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th>Method</th>
+						<th>Total</th>
+						<th>Count</th>
+						<th>Share</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in payment_method_summary %}
+					<tr>
+						<td>{{ row.payment_method }}</td>
+						<td>{{ "{:,.2f}".format(row.total_amount) }}</td>
+						<td>{{ row.transaction_count }}</td>
+						<td>{{ "{:,.2f}".format(row.share_of_expenses) }}%</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</article>
+	</section>
+
+	<section class="panel">
 		<div class="section-heading">
-			<h2>Statistical computations</h2>
+			<h2>Outlier Sensitivity</h2>
 		</div>
 		<table>
 			<thead>
 				<tr>
 					<th>Metric</th>
-					<th>Value</th>
+					<th>Before Capping</th>
+					<th>After Capping</th>
+					<th>Change</th>
 				</tr>
 			</thead>
 			<tbody>
-				{% for row in statistics_table %}
 				<tr>
-					<td>{{ row.metric }}</td>
-					<td>{{ "{:,.2f}".format(row.value) }}</td>
+					<td>Income</td>
+					<td>
+						{{ "{:,.2f}".format(outlier_sensitivity.uncapped_income)
+						}}
+					</td>
+					<td>
+						{{ "{:,.2f}".format(outlier_sensitivity.capped_income)
+						}}
+					</td>
+					<td>
+						{{ "{:,.2f}".format(outlier_sensitivity.income_change)
+						}}
+					</td>
 				</tr>
-				{% endfor %}
+				<tr>
+					<td>Expenses</td>
+					<td>
+						{{
+						"{:,.2f}".format(outlier_sensitivity.uncapped_expense)
+						}}
+					</td>
+					<td>
+						{{ "{:,.2f}".format(outlier_sensitivity.capped_expense)
+						}}
+					</td>
+					<td>
+						{{ "{:,.2f}".format(outlier_sensitivity.expense_change)
+						}}
+					</td>
+				</tr>
+				<tr>
+					<td>Net savings</td>
+					<td>
+						{{
+						"{:,.2f}".format(outlier_sensitivity.uncapped_net_savings)
+						}}
+					</td>
+					<td>
+						{{
+						"{:,.2f}".format(outlier_sensitivity.capped_net_savings)
+						}}
+					</td>
+					<td>
+						{{
+						"{:,.2f}".format(outlier_sensitivity.net_savings_change)
+						}}
+					</td>
+				</tr>
 			</tbody>
 		</table>
-	</article>
-
-	<article class="panel">
-		<div class="section-heading">
-			<h2>Top expense categories</h2>
-		</div>
-		<table>
-			<thead>
-				<tr>
-					<th>Category</th>
-					<th>Total</th>
-					<th>Share</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for row in category_summary %}
-				<tr>
-					<td>{{ row.category }}</td>
-					<td>{{ "{:,.2f}".format(row.total_amount) }}</td>
-					<td>{{ "{:,.2f}".format(row.share_of_expenses) }}%</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</article>
-</section>
-
-<section class="grid two-columns">
-	<article class="panel">
-		<div class="section-heading">
-			<h2>Cleaning Report</h2>
-		</div>
-		<dl class="report-list">
-			<div>
-				<dt>Original rows</dt>
-				<dd>{{ cleaning_report.original_rows }}</dd>
-			</div>
-			<div>
-				<dt>Cleaned rows</dt>
-				<dd>{{ cleaning_report.cleaned_rows }}</dd>
-			</div>
-			<div>
-				<dt>Removed rows</dt>
-				<dd>{{ cleaning_report.removed_rows }}</dd>
-			</div>
-			<div>
-				<dt>Missing values filled</dt>
-				<dd>{{ cleaning_report.missing_values_filled }}</dd>
-			</div>
-			<div>
-				<dt>Duplicates removed</dt>
-				<dd>{{ cleaning_report.duplicates_removed }}</dd>
-			</div>
-			<div>
-				<dt>Invalid amount rows removed</dt>
-				<dd>{{ cleaning_report.invalid_amount_rows_removed }}</dd>
-			</div>
-			<div>
-				<dt>Invalid date rows removed</dt>
-				<dd>{{ cleaning_report.invalid_date_rows_removed }}</dd>
-			</div>
-			<div>
-				<dt>Invalid type rows removed</dt>
-				<dd>{{ cleaning_report.invalid_type_rows_removed }}</dd>
-			</div>
-			<div>
-				<dt>Standardized text entries</dt>
-				<dd>{{ cleaning_report.standardized_text_entries }}</dd>
-			</div>
-			<div>
-				<dt>Salary expense records reviewed</dt>
-				<dd>{{ cleaning_report.salary_expense_records_reviewed }}</dd>
-			</div>
-			<div>
-				<dt>Salary records reclassified as income</dt>
-				<dd>{{ cleaning_report.salary_records_reclassified_as_income }}</dd>
-			</div>
-			<div>
-				<dt>Salary records kept as expense</dt>
-				<dd>{{ cleaning_report.salary_records_kept_as_expense }}</dd>
-			</div>
-			<div>
-				<dt>Unknown categories inferred</dt>
-				<dd>{{ cleaning_report.unknown_categories_inferred }}</dd>
-			</div>
-			<div>
-				<dt>Unknown categories remaining</dt>
-				<dd>{{ cleaning_report.unknown_categories_remaining }}</dd>
-			</div>
-			<div>
-				<dt>Outliers capped</dt>
-				<dd>{{ cleaning_report.outliers_capped }}</dd>
-			</div>
-		</dl>
 		<p class="compact-text">
-			Engineered columns: {{ cleaning_report.engineered_columns | join(", ") }}
+			{{ outlier_sensitivity.outliers_capped }} transactions were capped,
+			equal to {{
+			"{:,.2f}".format(outlier_sensitivity.outlier_transaction_rate) }}%
+			of cleaned records.
 		</p>
-	</article>
+	</section>
 
-	<article class="panel">
+	<section id="data-preview" class="panel data-preview-panel">
 		<div class="section-heading">
-			<h2>Advanced Analysis</h2>
+			<h2>Data preview</h2>
 		</div>
-		<table>
-			<thead>
-				<tr>
-					<th>Metric</th>
-					<th>Value</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>Monthly net cash-flow variance</td>
-					<td>{{ "{:,.2f}".format(extended_metrics.monthly_net_variance) }}</td>
-				</tr>
-				<tr>
-					<td>Monthly net cash-flow standard deviation</td>
-					<td>
-						{{ "{:,.2f}".format(extended_metrics.monthly_net_standard_deviation) }}
-					</td>
-				</tr>
-				<tr>
-					<td>Positive savings months</td>
-					<td>
-						{{ extended_metrics.positive_savings_months }} of
-						{{ extended_metrics.total_months }} ({{
-						"{:,.2f}".format(extended_metrics.positive_savings_month_share) }}%)
-					</td>
-				</tr>
-				<tr>
-					<td>Top 3 category concentration</td>
-					<td>
-						{{ "{:,.2f}".format(extended_metrics.top_three_category_concentration) }}%
-					</td>
-				</tr>
-				<tr>
-					<td>Flagged transaction rate</td>
-					<td>
-						{{ "{:,.2f}".format(extended_metrics.outlier_transaction_rate) }}%
-					</td>
-				</tr>
-				<tr>
-					<td>Expense mean-median gap</td>
-					<td>{{ "{:,.2f}".format(extended_metrics.expense_mean_median_gap) }}</td>
-				</tr>
-			</tbody>
-		</table>
-	</article>
-</section>
-
-<section class="grid two-columns">
-	<article class="panel">
-		<div class="section-heading">
-			<h2>Monthly Summary</h2>
-		</div>
-		<table>
-			<thead>
-				<tr>
-					<th>Period</th>
-					<th>Income</th>
-					<th>Expense</th>
-					<th>Net</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for row in monthly_summary %}
-				<tr>
-					<td>{{ row.period }}</td>
-					<td>{{ "{:,.2f}".format(row.Income) }}</td>
-					<td>{{ "{:,.2f}".format(row.Expense) }}</td>
-					<td>{{ "{:,.2f}".format(row.net_savings) }}</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</article>
-
-	<article class="panel">
-		<div class="section-heading">
-			<h2>Payment Method Summary</h2>
-		</div>
-		<table>
-			<thead>
-				<tr>
-					<th>Method</th>
-					<th>Total</th>
-					<th>Count</th>
-					<th>Share</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for row in payment_method_summary %}
-				<tr>
-					<td>{{ row.payment_method }}</td>
-					<td>{{ "{:,.2f}".format(row.total_amount) }}</td>
-					<td>{{ row.transaction_count }}</td>
-					<td>{{ "{:,.2f}".format(row.share_of_expenses) }}%</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</article>
-</section>
-
-<section class="panel">
-	<div class="section-heading">
-		<h2>Outlier Sensitivity</h2>
-	</div>
-	<table>
-		<thead>
-			<tr>
-				<th>Metric</th>
-				<th>Before Capping</th>
-				<th>After Capping</th>
-				<th>Change</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td>Income</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.uncapped_income) }}</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.capped_income) }}</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.income_change) }}</td>
-			</tr>
-			<tr>
-				<td>Expenses</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.uncapped_expense) }}</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.capped_expense) }}</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.expense_change) }}</td>
-			</tr>
-			<tr>
-				<td>Net savings</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.uncapped_net_savings) }}</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.capped_net_savings) }}</td>
-				<td>{{ "{:,.2f}".format(outlier_sensitivity.net_savings_change) }}</td>
-			</tr>
-		</tbody>
-	</table>
-	<p class="compact-text">
-		{{ outlier_sensitivity.outliers_capped }} transactions were capped, equal to
-		{{ "{:,.2f}".format(outlier_sensitivity.outlier_transaction_rate) }}% of
-		cleaned records.
-	</p>
-</section>
-
-<section id="data-preview" class="panel data-preview-panel">
-	<div class="section-heading">
-		<h2>Data preview</h2>
-	</div>
-	<div class="table-scroll">
-		<table>
-			<thead>
-				<tr>
-					{% for column in columns if column not in ["description", "is_outlier", "month_name"] %}
-					<th>{{ column }}</th>
+		<div class="table-scroll">
+			<table>
+				<thead>
+					<tr>
+						{% for column in columns if column not in
+						["description", "is_outlier", "month_name"] %}
+						<th>{{ column }}</th>
+						{% endfor %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in cleaned_preview %}
+					<tr>
+						{% for column in columns if column not in
+						["description", "is_outlier", "month_name"] %}
+						<td>{{ row[column] }}</td>
+						{% endfor %}
+					</tr>
 					{% endfor %}
-				</tr>
-			</thead>
-			<tbody>
-				{% for row in cleaned_preview %}
-				<tr>
-					{% for column in columns if column not in ["description", "is_outlier", "month_name"] %}
-					<td>{{ row[column] }}</td>
-					{% endfor %}
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</div>
-</section>
+				</tbody>
+			</table>
+		</div>
+	</section>
 {% endblock %}

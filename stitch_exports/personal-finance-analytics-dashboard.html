@@ -1,0 +1,395 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Personal Finance Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed": "#00201d",
+                      "outline-variant": "#bcc9c6",
+                      "on-primary-fixed-variant": "#005049",
+                      "surface-bright": "#f5faf8",
+                      "error": "#ba1a1a",
+                      "surface-container-high": "#e4e9e7",
+                      "secondary": "#006c4a",
+                      "on-primary": "#ffffff",
+                      "on-background": "#171d1c",
+                      "on-tertiary-fixed-variant": "#004c6e",
+                      "secondary-fixed": "#85f8c4",
+                      "surface": "#f5faf8",
+                      "outline": "#6d7a77",
+                      "primary-fixed": "#89f5e7",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-container": "#82f5c1",
+                      "on-secondary-container": "#00714e",
+                      "surface-container-low": "#f0f5f2",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#f4fffc",
+                      "secondary-fixed-dim": "#68dba9",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed-variant": "#005137",
+                      "surface-container-highest": "#dee4e1",
+                      "tertiary-container": "#007cb1",
+                      "surface-tint": "#006a61",
+                      "on-tertiary-fixed": "#001e2f",
+                      "on-secondary": "#ffffff",
+                      "primary-container": "#008378",
+                      "surface-dim": "#d6dbd9",
+                      "on-tertiary-container": "#fcfcff",
+                      "on-surface-variant": "#3d4947",
+                      "inverse-surface": "#2c3130",
+                      "surface-container": "#eaefed",
+                      "tertiary-fixed": "#c9e6ff",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed": "#002114",
+                      "tertiary-fixed-dim": "#89ceff",
+                      "tertiary": "#00628d",
+                      "on-surface": "#171d1c",
+                      "error-container": "#ffdad6",
+                      "inverse-on-surface": "#edf2f0",
+                      "inverse-primary": "#6bd8cb",
+                      "primary-fixed-dim": "#6bd8cb",
+                      "background": "#f5faf8",
+                      "primary": "#00685f",
+                      "surface-variant": "#dee4e1"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-padding": "32px",
+                      "stack-lg": "24px",
+                      "stack-md": "16px",
+                      "stack-sm": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "numeric-display": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "numeric-display": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+          .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+          }
+          .glass-panel {
+              background: rgba(255, 255, 255, 0.7);
+              backdrop-filter: blur(12px);
+              -webkit-backdrop-filter: blur(12px);
+              border: 1px solid rgba(255, 255, 255, 0.3);
+          }
+      </style>
+</head>
+<body class="bg-background text-on-background font-body-lg min-h-screen flex flex-col antialiased">
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant w-full px-container-padding py-stack-md flex flex-col md:flex-row justify-between items-start md:items-center sticky top-0 z-50">
+<div class="flex items-center gap-stack-md mb-stack-md md:mb-0">
+<div class="flex-shrink-0 w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+</div>
+<div>
+<h1 class="text-headline-md font-headline-md font-extrabold text-primary">Personal Finance Analytics</h1>
+
+</div>
+</div>
+<div class="hidden md:flex gap-stack-lg items-center">
+<nav class="flex gap-stack-md">
+<a class="text-primary border-b-2 border-primary pb-1 font-body-sm text-body-sm" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-200 font-body-sm text-body-sm" href="#">Analysis</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-200 font-body-sm text-body-sm" href="#">Transactions</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-200 font-body-sm text-body-sm" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-caps text-label-caps hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                Export
+            </button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden ml-2 cursor-pointer border border-outline-variant">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A clean, professional portrait of a user in a well-lit studio environment, subtle gradient background, soft lighting, modern corporate aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCElWVGTiMAVAVmvCYIXWLFiP6XClYZOXNk454rotYrUuB4EkPfAHh2UKivBjnJ9BnrRjEkI7Ytn3HAQsi6TikFHtMQTzif0nNf8WNi6Iyj01LPxo2dhBEEVuh_WOjIfYdy9SHypRbq9Eukli3wN4VDcTQqsrOf8aQZroyu1Dc7mYgQda_QOJ_pwNe52YEbA1247y2mDGLcqmQIrVCbkczwdYp_nv9sb5CisVYMfqubmtkVU6imRddOxp2XHtiJvS9kijve4XbgOv81">
+</div>
+</div>
+</header>
+<main class="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-container-padding py-stack-lg space-y-stack-lg">
+<!-- KPI Section -->
+<section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-gutter">
+<!-- Total Income -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Total Income</span>
+
+</div>
+<div class="text-numeric-display font-numeric-display text-on-surface mb-1">$124,500</div>
+<div class="flex items-center gap-1 text-label-caps font-label-caps text-secondary">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span class="">+5% vs prev period</span>
+</div>
+</div>
+<!-- Total Expenses -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Total Expenses</span>
+
+</div>
+<div class="text-numeric-display font-numeric-display text-on-surface mb-1">$82,300</div>
+<div class="flex items-center gap-1 text-label-caps font-label-caps text-secondary">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+<span class="">-2% vs prev period</span>
+</div>
+</div>
+<!-- Net Savings -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Net Savings</span>
+
+</div>
+<div class="text-numeric-display font-numeric-display text-on-surface mb-1">$42,200</div>
+</div>
+<!-- Savings Rate -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Savings Rate</span>
+
+</div>
+<div class="text-numeric-display font-numeric-display text-on-surface mb-1">33.9%</div>
+</div>
+<!-- Total Transactions -->
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<span class="text-body-sm font-body-sm text-on-surface-variant">Total Transactions</span>
+
+</div>
+<div class="text-numeric-display font-numeric-display text-on-surface mb-1">1,240</div>
+</div>
+<!-- Outliers Flagged -->
+
+</section>
+<!-- Monthly Trend Section -->
+<section class="space-y-stack-md">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] overflow-hidden border border-outline-variant">
+<div class="p-stack-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+<h2 class="text-headline-md font-headline-md text-on-surface">Monthly Income, Expenses, and Net Savings</h2>
+<button class="text-on-surface-variant hover:bg-surface-container p-1 rounded transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="p-stack-lg h-[300px] w-full bg-[url('placeholder')] bg-cover bg-center" data-alt="A clean, abstract data visualization line chart showing three intersecting lines representing income, expenses, and savings over time. Soft teal and emerald tones on a pristine white background with subtle grid lines. Modern, minimalist corporate SaaS aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA4NvqDzIvcdXUhAR7xDYXGRdbKgjNZe2bgE-LicRI-sIHovK1V4StKKO4Zr5AogfYDzhdYKg9AYvKxOlC9y_F6uNMp_dglx-UdlWXmrR-qjAQs5ukzenLNLipGhQURats8Mjzy0tDmGonK1yk-z1BLWcZ6kVDBeGSac9lSZ-25yj4hAcpATp3-v9dMK6PpLBNqp4ruBhiOZF2iCpDyUzf1HYnluI497pZNWcmMQq4t1JqZBkIxaNYje3M-JLQCAH5Tq_58oWeLmU5m')">
+<!-- Placeholder for Chart -->
+<div class="w-full h-full border-b border-l border-surface-container-highest relative opacity-20">
+<!-- Decorative grid lines to simulate chart area if image fails -->
+<div class="absolute inset-x-0 top-1/4 border-t border-surface-container-highest"></div>
+<div class="absolute inset-x-0 top-2/4 border-t border-surface-container-highest"></div>
+<div class="absolute inset-x-0 top-3/4 border-t border-surface-container-highest"></div>
+</div>
+</div>
+</div>
+<div class="bg-surface-bright rounded-lg p-stack-md border border-outline-variant flex items-start gap-stack-md">
+<div class="mt-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">info</span>
+</div>
+<div>
+<h3 class="text-label-caps font-label-caps text-on-surface-variant mb-1 uppercase tracking-wider">Graph Conclusion</h3>
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                        Monthly cash flow changes significantly across the covered period. Several months recorded negative net savings, which means expenses exceeded income in those periods. <strong class="text-primary font-semibold">Action:</strong> Review months with negative savings and compare them with the largest transactions.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Category Analysis & Transaction Behavior Grids -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Category Analysis Left -->
+<div class="space-y-stack-md flex flex-col h-full">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex-1 flex flex-col">
+<div class="p-stack-md border-b border-outline-variant bg-surface-bright">
+<h2 class="text-headline-md font-headline-md text-on-surface">Top Expense Categories</h2>
+</div>
+<div class="p-stack-md flex-1 min-h-[200px] bg-[url('placeholder')] bg-cover bg-center" data-alt="A minimalist horizontal bar chart visualization showing different spending categories. The bars use a gradient of teal and slate colors against a clean white background. Modern, corporate aesthetic with ample negative space." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuChSZDawavtSD6nM0OznXBNnXMnpBBMTv-1uywJiNsxiyP2SHsZaltxPa6AbOoJUTcWZyHe4hCpzxBLnhVYfnLuJOPziFjw-yFUja6SsllEhQH0b4U8DLVawVPUPkdRj5E2wT9pqC8FpwoarJPB-Uv-Z181Nn6dPL8Iq73XtPp4tiWNfMfRC30TaZXibO-GUW5WXRZMYfb6WB_ByDHbPszluMU3UbPswDnemPmD4LRE5tH63BgWjGz6OdO4Hfs9W2vN8so3FLsVFZhT')">
+</div>
+</div>
+<div class="bg-surface-bright rounded-lg p-stack-md border border-outline-variant">
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                        Travel is the largest expense category, making it the strongest contributor to total spending. <strong class="text-primary font-semibold">Action:</strong> Review Travel transactions and set a monthly or quarterly budget limit.
+                    </p>
+</div>
+</div>
+<!-- Category Analysis Right -->
+<div class="space-y-stack-md flex flex-col h-full">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex-1 flex flex-col">
+<div class="p-stack-md border-b border-outline-variant bg-surface-bright">
+<h2 class="text-headline-md font-headline-md text-on-surface">Expense Share by Category</h2>
+</div>
+<div class="p-stack-md flex-1 min-h-[200px] bg-[url('placeholder')] bg-cover bg-center" data-alt="A sophisticated donut chart visualization representing proportional data. The segments are colored in varying shades of emerald and deep teal, set against a pristine white background with subtle shadow depth. Minimalist SaaS style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5e_yA3br3OakDdrLqQh3dya_a7n-9N1lQpUk1ojQLp25UrwkUIqFD9IA-6NTEglN-hZDVdMv3JajX3QyDJn2zb4qcLLnjZ25I7iO2Vitw_p1rJ9LevHc6XvfGs-47If4qQX64UUDbuNP-g0Q9XSJFJSnptnn5_4aai9rHR2NAvFwtp6CLFg8jrun8TtYw30MNVIKoAAiuuwJ49B1KGFloHdmDxQRdEvOPy2davmavHy0g0mUgGbhg07Raau6NHQRalaHgntwcTNyr')">
+</div>
+</div>
+<div class="bg-surface-bright rounded-lg p-stack-md border border-outline-variant">
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                        Spending is concentrated in a few major categories, so budget control should focus on the largest categories first. <strong class="text-primary font-semibold">Action:</strong> Prioritize the top three categories before reducing smaller expenses.
+                    </p>
+</div>
+</div>
+<!-- Transaction Behavior Left -->
+<div class="space-y-stack-md flex flex-col h-full">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex-1 flex flex-col">
+<div class="p-stack-md border-b border-outline-variant bg-surface-bright">
+<h2 class="text-headline-md font-headline-md text-on-surface">Transaction Amount Distribution</h2>
+</div>
+<div class="p-stack-md flex-1 min-h-[200px] bg-[url('placeholder')] bg-cover bg-center" data-alt="A clean histogram data visualization showing a bell curve distribution of transaction amounts. Soft teal bars against a bright white background with faint slate grid lines. Modern and professional design." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_DAbXvT_aHl4EzfEn9mxqmuK7WeX9G4QQkMlyqeupAG1SovFBOx0AQNe-qp3sgO5E37s0gas9iGsxmVp-54iBnj3qD7d2QCU9JzP8boUlSZgtRpIbgA35KRFhTsJHn__MY7FbRJbYt2tFWFXW4WBVG7CXPIF0fh6wY4_tYbJR4vMpFlcVF15n-HSFO8fTqy8Ziaf4pLgwzW_rNDdzi8H9ybYtPxh60HRuz_X8dXBIbV6n0w4Razw6By6ei8mGlhGYfHd812DigeGm')">
+</div>
+</div>
+<div class="bg-surface-bright rounded-lg p-stack-md border border-outline-variant">
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                        Most transactions fall within a common spending range, but flagged outliers should be reviewed before final interpretation. <strong class="text-primary font-semibold">Action:</strong> Check whether outliers are valid large expenses or possible data issues.
+                    </p>
+</div>
+</div>
+<!-- Transaction Behavior Right -->
+<div class="space-y-stack-md flex flex-col h-full">
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex-1 flex flex-col">
+<div class="p-stack-md border-b border-outline-variant bg-surface-bright">
+<h2 class="text-headline-md font-headline-md text-on-surface">Expense Totals by Payment Method</h2>
+</div>
+<div class="p-stack-md flex-1 min-h-[200px] bg-[url('placeholder')] bg-cover bg-center" data-alt="A modern stacked bar chart visualizing payment methods. Deep teal and light slate accents on a crisp white background. Minimalist corporate financial aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC7FuyAnJe9ozLyn0u2ggkvtboos7VHMs637DIyNT4Prsv2PctdWJM-N5AIO-xiV-cvSj8uUjxWJ7mTjf683eSLxuiSfUHFKFWVJVA3wHpU-YyHyaGkWXpG4n1KoQ6Xje7RUZWpDfmN0uGCBW_U-grw2t6IOW3aA6C9v-whiXMYM4WbYQDamWxv1MlhUpyFfnrWb61kFtpHjq3yFeadExdozdkHjzddJLoByFUiZIQEzArmJ21DfRkBtcpvKHu81qq_i5qJIPHmf0Jq')">
+</div>
+</div>
+<div class="bg-surface-bright rounded-lg p-stack-md border border-outline-variant">
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                        Credit Card accounts for the largest share of payment-based expenses. <strong class="text-primary font-semibold">Action:</strong> Group credit card transactions by category to see where credit card spending is mostly used.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Recommendations Section -->
+<section class="mt-stack-lg">
+<h2 class="text-headline-lg font-headline-lg text-on-surface mb-stack-md">Recommendations</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-stack-md">
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex items-start gap-3 hover:-translate-y-1 transition-transform duration-300">
+
+<p class="text-body-sm font-body-sm text-on-surface font-medium">Monitor monthly cash flow.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex items-start gap-3 hover:-translate-y-1 transition-transform duration-300">
+
+<p class="text-body-sm font-body-sm text-on-surface font-medium">Control the largest expense categories.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex items-start gap-3 hover:-translate-y-1 transition-transform duration-300">
+
+<p class="text-body-sm font-body-sm text-on-surface font-medium">Review the peak spending month.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex items-start gap-3 hover:-translate-y-1 transition-transform duration-300">
+
+<p class="text-body-sm font-body-sm text-on-surface font-medium">Track credit card spending.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-outline-variant flex items-start gap-3 hover:-translate-y-1 transition-transform duration-300">
+
+<p class="text-body-sm font-body-sm text-on-surface font-medium">Validate outlier transactions.</p>
+</div>
+</div>
+</section>
+<!-- Final Conclusion -->
+<section class="mt-stack-lg">
+
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full px-container-padding py-stack-lg border-t border-outline-variant mt-auto text-center">
+<a class="text-label-caps font-label-caps text-outline hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">View Data Cleaning Summary</a>
+</footer>
+
+
+</body></html>

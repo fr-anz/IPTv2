@@ -2,10 +2,12 @@ import pandas as pd
 
 from app import create_app
 from finance_analytics.analytics import (
+    build_dashboard_analysis_results,
     calculate_extended_metrics,
     calculate_metrics,
     calculate_outlier_sensitivity,
     generate_all_insights,
+    generate_dashboard_summary,
     generate_insights,
     get_category_semantic_audit,
     get_category_summary,
@@ -255,19 +257,80 @@ def test_dashboard_renders_gap_closure_sections():
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "Download Cleaned CSV" in html
-    assert "Highest Expense Category" in html
-    assert "Finding:" in html
-    assert "Interpretation:" in html
-    assert "Recommendation:" in html
+    assert "Total income" in html
+    assert "Total expenses" in html
+    assert "Net savings" in html
+    assert "dashboard-summary" not in html
+    assert "Key Insight" not in html
+    assert "Recommendation" in html
+    assert "Conclusion" in html
+    assert html.index("Conclusion") < html.index("Recommendation")
+    assert "Top expense categories" in html
+    assert "monthly trend shows" in html
+    assert "Review" in html
     assert "Cleaning Report" in html
     assert "Advanced Analysis" in html
     assert "Monthly Summary" in html
     assert "Payment Method Summary" in html
     assert "Outlier Sensitivity" in html
-    assert "No salary-as-expense issue was detected" in html
+    assert "Dataset semantic audit" not in html
+    assert "No salary-as-expense issue was detected" not in html
     assert "Salary records reclassified as income" in html
     assert "Unknown categories inferred" in html
+
+
+def test_dashboard_summary_groups_dynamic_financial_story():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Salary",
+                "Category": "Salary",
+                "Amount": 1000,
+                "Type": "Income",
+                "Payment Method": "Bank Transfer",
+            },
+            {
+                "Date": "2024-01-05",
+                "Transaction Description": "Trip",
+                "Category": "Travel",
+                "Amount": 600,
+                "Type": "Expense",
+                "Payment Method": "Credit Card",
+            },
+            {
+                "Date": "2024-02-06",
+                "Transaction Description": "Rent",
+                "Category": "Rent",
+                "Amount": 1200,
+                "Type": "Expense",
+                "Payment Method": "Credit Card",
+            },
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    analysis_results = build_dashboard_analysis_results(cleaned, calculate_metrics(cleaned))
+    summary = generate_dashboard_summary(analysis_results)
+
+    assert len(summary["key_insights"]) >= 4
+    assert len(summary["recommendations"]) >= 4
+    assert "monthly_trends" in summary["charts"]
+    assert "top_expense_categories" in summary["charts"]
+    assert "conclusion" in summary["charts"]["top_expense_categories"]
+    assert "conclusion" in summary["charts"]["expense_share_by_category"]
+    assert "conclusion" in summary["charts"]["transaction_amount_distribution"]
+    assert "conclusion" in summary["charts"]["payment_method_expenses"]
+    assert "Rent" in " ".join(summary["key_insights"])
+    assert "Credit Card" in " ".join(summary["recommendations"])
+    assert "Rent" in summary["charts"]["top_expense_categories"]["key_insight"]
+    assert "Credit Card" in summary["charts"]["payment_method_expenses"]["recommendation"]
+    assert "The user should monitor monthly cash flow more consistently" in summary["charts"]["monthly_trends"]["recommendation"]
+    assert "The user should prioritize reviewing the Rent category" in summary["charts"]["top_expense_categories"]["recommendation"]
+    assert "The user should review the" in summary["charts"]["transaction_amount_distribution"]["recommendation"]
+    assert "Rent is the largest expense category" in summary["charts"]["top_expense_categories"]["conclusion"]
+    assert "Credit Card is the most used payment method" in summary["charts"]["payment_method_expenses"]["conclusion"]
+    assert "descriptive results based on the available dataset" in summary["conclusion"]
 
 
 def test_graph_specific_insights_cover_required_findings():

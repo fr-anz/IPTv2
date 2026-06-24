@@ -6,11 +6,13 @@ from pathlib import Path
 from flask import Flask, flash, render_template, request, send_file
 
 from finance_analytics.analytics import (
+    build_dashboard_analysis_results,
     build_dashboard_charts,
     calculate_extended_metrics,
     calculate_metrics,
     calculate_outlier_sensitivity,
     generate_all_insights,
+    generate_dashboard_summary,
     get_category_summary,
     get_category_semantic_audit,
     get_monthly_summary,
@@ -37,6 +39,8 @@ def create_app() -> Flask:
         charts = build_dashboard_charts(cleaned_data)
         chart_insights = generate_all_insights(cleaned_data, metrics)
         insights = chart_insights["overall_summary"]
+        analysis_results = build_dashboard_analysis_results(cleaned_data, metrics)
+        dashboard_summary = generate_dashboard_summary(analysis_results)
         monthly_summary = get_monthly_summary(cleaned_data).tail(12)
         category_summary = get_category_summary(cleaned_data).head(10)
         payment_method_summary = get_payment_method_summary(cleaned_data)
@@ -52,6 +56,7 @@ def create_app() -> Flask:
             charts=charts,
             insights=insights,
             chart_insights=chart_insights,
+            dashboard_summary=dashboard_summary,
             cleaning_report=cleaning_report,
             monthly_summary=monthly_summary.to_dict("records"),
             category_summary=category_summary.to_dict("records"),

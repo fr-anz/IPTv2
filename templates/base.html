@@ -4,6 +4,16 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{% block title %}Personal Finance Analytics{% endblock %}</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+			rel="stylesheet"
+		/>
 		<link
 			rel="stylesheet"
 			href="{{ url_for('static', filename='css/styles.css') }}"
@@ -13,17 +23,14 @@
 		<a class="skip-link" href="#dashboard-content">Skip to content</a>
 		<header class="site-header">
 			<a class="brand" href="{{ url_for('dashboard') }}">
-				<span class="brand-mark">PF</span>
 				<span>
-					<strong>Personal Finance</strong>
-					<small>Analytics dashboard</small>
+					<strong>Personal Finance Analytics</strong>
 				</span>
 			</a>
 			<nav class="site-nav" aria-label="Dashboard sections">
-				<a href="#overview">Overview</a>
-				<a href="#charts">Charts</a>
+				<a class="active" href="#charts">Charts</a>
 				<a href="#analysis">Analysis</a>
-				<a href="#data-preview">Data</a>
+				<a href="#data-preview">Transactions</a>
 			</nav>
 		</header>
 
@@ -37,5 +44,51 @@
 			</div>
 			{% endif %} {% endwith %} {% block content %}{% endblock %}
 		</main>
+		<script>
+			const navLinks = [...document.querySelectorAll(".site-nav a")];
+			const siteHeader = document.querySelector(".site-header");
+			const sections = navLinks
+				.map((link) => document.querySelector(link.getAttribute("href")))
+				.filter(Boolean);
+
+			function headerOffset() {
+				return (siteHeader?.getBoundingClientRect().height || 0) + 20;
+			}
+
+			function setActiveNav() {
+				const offset = headerOffset();
+				let activeId = sections[0]?.id;
+
+				for (const section of sections) {
+					if (section.getBoundingClientRect().top <= offset) {
+						activeId = section.id;
+					}
+				}
+
+				for (const link of navLinks) {
+					link.classList.toggle(
+						"active",
+						link.getAttribute("href") === `#${activeId}`,
+					);
+				}
+			}
+
+			for (const link of navLinks) {
+				link.addEventListener("click", (event) => {
+					const target = document.querySelector(link.getAttribute("href"));
+					if (!target) return;
+
+					event.preventDefault();
+					window.scrollTo({
+						top: target.getBoundingClientRect().top + window.scrollY - headerOffset(),
+						behavior: "smooth",
+					});
+				});
+			}
+
+			setActiveNav();
+			window.addEventListener("scroll", setActiveNav, { passive: true });
+			window.addEventListener("resize", setActiveNav);
+		</script>
 	</body>
 </html>
