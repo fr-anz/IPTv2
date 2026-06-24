@@ -7,6 +7,22 @@ Insight = dict[str, str]
 AnalysisResults = dict[str, object]
 DashboardSummary = dict[str, object]
 
+CHART_PALETTE = [
+    "#2563eb",
+    "#f97316",
+    "#16a34a",
+    "#7c3aed",
+    "#e11d48",
+    "#0891b2",
+    "#d97706",
+    "#64748b",
+]
+MEASURE_COLORS = {
+    "Income": "#16a34a",
+    "Expense": "#dc2626",
+    "net_savings": "#2563eb",
+}
+
 
 def calculate_metrics(data: pd.DataFrame) -> dict[str, float | int | str]:
     income = data.loc[data["transaction_type"].eq("Income"), "amount_cleaned"].sum()
@@ -176,36 +192,25 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
         categories.head(10),
         x="category",
         y="total_amount",
+        color="category",
         labels={"category": "Category", "total_amount": "Total Expense"},
-        color_discrete_sequence=["#00685f"],
+        color_discrete_sequence=CHART_PALETTE,
     )
+    bar_chart.update_layout(showlegend=False)
     line_chart = px.line(
         monthly,
         x="period",
         y=["Income", "Expense", "net_savings"],
         labels={"period": "Month", "value": "Amount", "variable": "Measure"},
         markers=True,
-        color_discrete_map={
-            "Income": "#006c4a",
-            "Expense": "#ba1a1a",
-            "net_savings": "#00628d",
-        },
+        color_discrete_map=MEASURE_COLORS,
     )
     pie_chart = px.pie(
         categories.head(8),
         values="total_amount",
         names="category",
         hole=0.56,
-        color_discrete_sequence=[
-            "#00685f",
-            "#008378",
-            "#006c4a",
-            "#007cb1",
-            "#6bd8cb",
-            "#68dba9",
-            "#89ceff",
-            "#bcc9c6",
-        ],
+        color_discrete_sequence=CHART_PALETTE,
     )
     histogram = px.histogram(
         data,
@@ -213,15 +218,17 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
         color="transaction_type",
         labels={"amount_cleaned": "Transaction Amount", "transaction_type": "Type"},
         nbins=30,
-        color_discrete_map={"Income": "#006c4a", "Expense": "#00685f"},
+        color_discrete_map=MEASURE_COLORS,
     )
     payment_chart = px.bar(
         payment_methods,
         x="payment_method",
         y="total_amount",
+        color="payment_method",
         labels={"payment_method": "Payment Method", "total_amount": "Total Expense"},
-        color_discrete_sequence=["#00685f"],
+        color_discrete_sequence=CHART_PALETTE,
     )
+    payment_chart.update_layout(showlegend=False)
 
     return {
         "bar_chart": _to_html(bar_chart, include_plotlyjs=True),
@@ -1123,7 +1130,7 @@ def _to_html(figure, include_plotlyjs: bool = False) -> str:
         font=dict(family='Inter, "Segoe UI", sans-serif', color="#3d4947"),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        colorway=["#00685f", "#006c4a", "#00628d", "#ba1a1a", "#6bd8cb"],
+        colorway=CHART_PALETTE,
     )
     figure.update_xaxes(gridcolor="#f1f5f3", linecolor="#bcc9c6", zerolinecolor="#bcc9c6")
     figure.update_yaxes(gridcolor="#f1f5f3", linecolor="#bcc9c6", zerolinecolor="#bcc9c6")
