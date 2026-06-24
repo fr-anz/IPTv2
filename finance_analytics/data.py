@@ -48,6 +48,28 @@ PAYMENT_METHOD_ALIASES = {
     "unknown": "Unknown",
 }
 
+CATEGORY_KEYWORDS = {
+    "Groceries": ["grocery", "groceries", "supermarket"],
+    "Food & Drink": ["food", "restaurant", "cafe", "coffee", "dining", "lunch", "dinner"],
+    "Rent": ["rent", "apartment", "housing"],
+    "Transportation": ["bus", "taxi", "fuel", "gas", "transport", "train", "uber", "lyft"],
+    "Salary": ["salary", "payroll", "wage", "paycheck", "income"],
+    "Entertainment": ["movie", "game", "netflix", "spotify", "cinema", "concert"],
+    "Travel": ["hotel", "flight", "travel", "airline", "trip"],
+}
+
+SALARY_EXPENSE_KEYWORDS = [
+    "deduction",
+    "salary deduction",
+    "payroll fee",
+    "payroll expense",
+    "employee salary",
+    "employee payroll",
+    "staff salary",
+    "work-related payment",
+    "work related payment",
+]
+
 
 @dataclass(frozen=True)
 class CleaningReport:
@@ -60,6 +82,11 @@ class CleaningReport:
     invalid_date_rows_removed: int
     invalid_type_rows_removed: int
     standardized_text_entries: int
+    salary_expense_records_reviewed: int
+    salary_records_reclassified_as_income: int
+    salary_records_kept_as_expense: int
+    unknown_categories_inferred: int
+    unknown_categories_remaining: int
     outliers_capped: int
     engineered_columns: list[str]
 
@@ -74,6 +101,11 @@ class CleaningReport:
             "invalid_date_rows_removed": self.invalid_date_rows_removed,
             "invalid_type_rows_removed": self.invalid_type_rows_removed,
             "standardized_text_entries": self.standardized_text_entries,
+            "salary_expense_records_reviewed": self.salary_expense_records_reviewed,
+            "salary_records_reclassified_as_income": self.salary_records_reclassified_as_income,
+            "salary_records_kept_as_expense": self.salary_records_kept_as_expense,
+            "unknown_categories_inferred": self.unknown_categories_inferred,
+            "unknown_categories_remaining": self.unknown_categories_remaining,
             "outliers_capped": self.outliers_capped,
             "engineered_columns": self.engineered_columns,
         }
@@ -106,7 +138,7 @@ def clean_transactions(raw_data: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, 
     for column in text_columns:
         data[column] = data[column].fillna("Unknown").astype(str).str.strip().replace("", "Unknown")
 
-    data["category"] = data["category"].replace("", "Unknown").str.title()
+    data["category"] = data["category"].map(_normalize_category)
     data["transaction_type"] = data["transaction_type"].str.strip().str.title()
     data["payment_method"] = data["payment_method"].map(_normalize_payment_method)
     standardized_text_entries = _count_standardized_entries(text_values_before, data[text_columns])
@@ -127,6 +159,10 @@ def clean_transactions(raw_data: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, 
     invalid_type_mask = ~data["transaction_type"].isin(VALID_TYPES)
     invalid_type_rows = int(invalid_type_mask.sum())
     data = data.loc[~invalid_type_mask].copy()
+
+    unknown_categories_inferred = _infer_unknown_categories(data)
+    unknown_categories_remaining = int(data["category"].eq("Unknown").sum())
+    salary_review = _review_salary_expense_records(data)
 
     outlier_cap = _calculate_iqr_upper_cap(data["amount"])
     data["is_outlier"] = data["amount"] > outlier_cap
@@ -173,6 +209,11 @@ def clean_transactions(raw_data: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, 
         invalid_date_rows_removed=invalid_date_rows,
         invalid_type_rows_removed=invalid_type_rows,
         standardized_text_entries=standardized_text_entries,
+        salary_expense_records_reviewed=salary_review["reviewed"],
+        salary_records_reclassified_as_income=salary_review["reclassified_as_income"],
+        salary_records_kept_as_expense=salary_review["kept_as_expense"],
+        unknown_categories_inferred=unknown_categories_inferred,
+        unknown_categories_remaining=unknown_categories_remaining,
         outliers_capped=outliers_capped,
         engineered_columns=engineered_columns,
     )
@@ -210,6 +251,64 @@ def _normalize_amount_values(series: pd.Series) -> pd.Series:
         .str.replace("$", "", regex=False)
         .str.replace(",", "", regex=False)
     )
+
+
+def _normalize_category(value) -> str:
+    if pd.isna(value):
+        return "Unknown"
+
+    normalized = str(value).strip()
+    if not normalized or normalized.lower() in {"nan", "none", "unknown"}:
+        return "Unknown"
+
+    return normalized.title()
+
+
+def _infer_unknown_categories(data: pd.DataFrame) -> int:
+    unknown_mask = data["category"].eq("Unknown")
+    inferred = data.loc[unknown_mask, "description"].map(_infer_category_from_description)
+    inferred_mask = inferred.notna()
+    data.loc[inferred.index[inferred_mask], "category"] = inferred.loc[inferred_mask]
+    return int(inferred_mask.sum())
+
+
+def _infer_category_from_description(description: str) -> str | None:
+    normalized = str(description).strip().lower()
+    if not normalized or normalized == "unknown":
+        return None
+
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        if any(keyword in normalized for keyword in keywords):
+            return category
+
+    return None
+
+
+def _review_salary_expense_records(data: pd.DataFrame) -> dict[str, int]:
+    salary_expense_mask = data["category"].eq("Salary") & data["transaction_type"].eq("Expense")
+    reviewed = int(salary_expense_mask.sum())
+    if reviewed == 0:
+        return {"reviewed": 0, "reclassified_as_income": 0, "kept_as_expense": 0}
+
+    expense_description_mask = data.loc[salary_expense_mask, "description"].map(
+        _description_suggests_salary_expense
+    )
+    kept_index = expense_description_mask[expense_description_mask].index
+    reclassified_index = expense_description_mask[~expense_description_mask].index
+
+    data.loc[kept_index, "category"] = "Payroll Expense"
+    data.loc[reclassified_index, "transaction_type"] = "Income"
+
+    return {
+        "reviewed": reviewed,
+        "reclassified_as_income": int(len(reclassified_index)),
+        "kept_as_expense": int(len(kept_index)),
+    }
+
+
+def _description_suggests_salary_expense(description: str) -> bool:
+    normalized = str(description).strip().lower()
+    return any(keyword in normalized for keyword in SALARY_EXPENSE_KEYWORDS)
 
 
 def _clean_compare_value(value) -> str:

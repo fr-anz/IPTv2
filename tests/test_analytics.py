@@ -1,6 +1,17 @@
 import pandas as pd
 
-from finance_analytics.analytics import calculate_metrics, get_category_summary, get_monthly_summary
+from app import create_app
+from finance_analytics.analytics import (
+    calculate_extended_metrics,
+    calculate_metrics,
+    calculate_outlier_sensitivity,
+    generate_all_insights,
+    generate_insights,
+    get_category_semantic_audit,
+    get_category_summary,
+    get_monthly_summary,
+    get_payment_method_summary,
+)
 from finance_analytics.data import clean_transactions
 
 
@@ -103,3 +114,301 @@ def test_grouped_summaries_are_ready_for_charts():
     assert monthly.loc[0, "period"] == "2024-01"
     assert monthly.loc[0, "net_savings"] == 2500
     assert categories.loc[0, "category"] == "Food"
+
+
+def test_extended_analysis_metrics_are_computed():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Salary",
+                "Category": "Salary",
+                "Amount": 1000,
+                "Type": "Income",
+                "Payment Method": "Bank Transfer",
+            },
+            {
+                "Date": "2024-01-02",
+                "Transaction Description": "Groceries",
+                "Category": "Food",
+                "Amount": 200,
+                "Type": "Expense",
+                "Payment Method": "Credit Card",
+            },
+            {
+                "Date": "2024-01-03",
+                "Transaction Description": "Rent",
+                "Category": "Rent",
+                "Amount": 100,
+                "Type": "Expense",
+                "Payment Method": "Debit Card",
+            },
+            {
+                "Date": "2024-02-01",
+                "Transaction Description": "Freelance",
+                "Category": "Other",
+                "Amount": 500,
+                "Type": "Income",
+                "Payment Method": "E-Wallet",
+            },
+            {
+                "Date": "2024-02-02",
+                "Transaction Description": "Groceries",
+                "Category": "Food",
+                "Amount": 700,
+                "Type": "Expense",
+                "Payment Method": "Credit Card",
+            },
+            {
+                "Date": "2024-02-03",
+                "Transaction Description": "Rent",
+                "Category": "Rent",
+                "Amount": 300,
+                "Type": "Expense",
+                "Payment Method": "Debit Card",
+            },
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    extended = calculate_extended_metrics(cleaned)
+    sensitivity = calculate_outlier_sensitivity(cleaned)
+    payment_methods = get_payment_method_summary(cleaned)
+    insights = generate_insights(cleaned, calculate_metrics(cleaned))
+
+    assert extended["positive_savings_months"] == 1
+    assert extended["total_months"] == 2
+    assert extended["positive_savings_month_share"] == 50
+    assert extended["top_three_category_concentration"] == 100
+    assert extended["expense_mean_median_gap"] == 75
+    assert sensitivity["capped_net_savings"] == sensitivity["uncapped_net_savings"]
+    assert payment_methods.iloc[0]["payment_method"] == "Credit Card"
+    assert len(insights) >= 4
+    assert {"title", "chart_id", "finding", "interpretation", "recommendation", "severity"}.issubset(
+        insights[0]
+    )
+
+
+def test_salary_expense_records_are_reclassified_or_kept_by_description():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Monthly salary deposit",
+                "Category": "Salary",
+                "Amount": 250,
+                "Type": "Expense",
+            },
+            {
+                "Date": "2024-01-02",
+                "Transaction Description": "Employee salary payroll expense",
+                "Category": "Salary",
+                "Amount": 100,
+                "Type": "Expense",
+            }
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    audit = get_category_semantic_audit(cleaned)
+
+    assert audit["has_salary_expenses"] is False
+    assert cleaned.loc[cleaned["amount"].eq(250), "transaction_type"].iloc[0] == "Income"
+    assert cleaned.loc[cleaned["amount"].eq(100), "transaction_type"].iloc[0] == "Expense"
+    assert cleaned.loc[cleaned["amount"].eq(100), "category"].iloc[0] == "Payroll Expense"
+
+
+def test_unknown_categories_are_inferred_from_description():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Coffee at cafe",
+                "Category": "",
+                "Amount": 25,
+                "Type": "Expense",
+            },
+            {
+                "Date": "2024-01-02",
+                "Transaction Description": "Unclear transaction",
+                "Category": None,
+                "Amount": 50,
+                "Type": "Expense",
+            },
+        ]
+    )
+
+    cleaned, report = clean_transactions(raw)
+
+    assert cleaned.loc[cleaned["amount"].eq(25), "category"].iloc[0] == "Food & Drink"
+    assert cleaned.loc[cleaned["amount"].eq(50), "category"].iloc[0] == "Unknown"
+    assert report["unknown_categories_inferred"] == 1
+    assert report["unknown_categories_remaining"] == 1
+
+
+def test_dashboard_renders_gap_closure_sections():
+    app = create_app()
+    app.config["TESTING"] = True
+    client = app.test_client()
+
+    response = client.get("/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Download Cleaned CSV" in html
+    assert "Highest Expense Category" in html
+    assert "Finding:" in html
+    assert "Interpretation:" in html
+    assert "Recommendation:" in html
+    assert "Cleaning Report" in html
+    assert "Advanced Analysis" in html
+    assert "Monthly Summary" in html
+    assert "Payment Method Summary" in html
+    assert "Outlier Sensitivity" in html
+    assert "No salary-as-expense issue was detected" in html
+    assert "Salary records reclassified as income" in html
+    assert "Unknown categories inferred" in html
+
+
+def test_graph_specific_insights_cover_required_findings():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Salary",
+                "Category": "Salary",
+                "Amount": 1000,
+                "Type": "Income",
+                "Payment Method": "Bank Transfer",
+            },
+            {
+                "Date": "2024-01-05",
+                "Transaction Description": "Trip",
+                "Category": "Travel",
+                "Amount": 600,
+                "Type": "Expense",
+                "Payment Method": "Credit Card",
+            },
+            {
+                "Date": "2024-01-06",
+                "Transaction Description": "Dinner",
+                "Category": "Food",
+                "Amount": 200,
+                "Type": "Expense",
+                "Payment Method": "Credit Card",
+            },
+            {
+                "Date": "2024-02-07",
+                "Transaction Description": "Rent",
+                "Category": "Rent",
+                "Amount": 1200,
+                "Type": "Expense",
+                "Payment Method": "Debit Card",
+            },
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    insights = generate_all_insights(cleaned, calculate_metrics(cleaned))
+
+    overall = insights["overall_summary"]
+    category = insights["top_expense_categories"][0]
+    monthly = insights["monthly_trends"]
+    payment = insights["payment_method_expenses"][0]
+
+    assert any(item["title"] == "Negative Net Savings" for item in overall)
+    assert any(item["severity"] == "high" for item in monthly)
+    assert category["title"] == "Highest Expense Category"
+    assert category["chart_id"] == "top_expense_categories"
+    assert "Rent" in category["finding"]
+    assert category["severity"] == "medium"
+    assert any(item["title"] == "Highest Spending Month" for item in monthly)
+    assert payment["title"] == "Dominant Payment Method"
+    assert payment["chart_id"] == "payment_method_expenses"
+
+
+def test_no_expense_records_return_safe_expense_insights():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Salary",
+                "Category": "Salary",
+                "Amount": 1000,
+                "Type": "Income",
+                "Payment Method": "Bank Transfer",
+            }
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    insights = generate_all_insights(cleaned, calculate_metrics(cleaned))
+
+    assert insights["top_expense_categories"][0]["title"] == "No Expense Categories"
+    assert insights["expense_share_by_category"][0]["title"] == "No Expense Share Available"
+    assert insights["payment_method_expenses"][0]["title"] == "No Payment Method Expense Data"
+
+
+def test_no_income_records_avoid_misleading_savings_rate_interpretation():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Rent",
+                "Category": "Rent",
+                "Amount": 1000,
+                "Type": "Expense",
+                "Payment Method": "Debit Card",
+            }
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    insights = generate_all_insights(cleaned, calculate_metrics(cleaned))
+
+    assert insights["overall_summary"][0]["title"] == "Missing Income Context"
+    assert any(item["title"] == "Income Records Missing" for item in insights["monthly_trends"])
+
+
+def test_salary_expense_warning_is_removed_after_cleaning_reclassification():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Monthly salary",
+                "Category": "Salary",
+                "Amount": 250,
+                "Type": "Expense",
+                "Payment Method": "Cash",
+            }
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    insights = generate_all_insights(cleaned, calculate_metrics(cleaned))
+
+    assert cleaned.loc[0, "transaction_type"] == "Income"
+    assert not any(
+        item["title"] == "Possible Salary Classification Issue"
+        for item in insights["overall_summary"]
+    )
+
+
+def test_unknown_category_warning_remains_when_inference_fails():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": "Unclear transaction",
+                "Category": "",
+                "Amount": 250,
+                "Type": "Expense",
+                "Payment Method": "Cash",
+            }
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    insights = generate_all_insights(cleaned, calculate_metrics(cleaned))
+
+    assert any(item["title"] == "Unknown Categories Present" for item in insights["overall_summary"])

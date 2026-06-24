@@ -10,13 +10,24 @@
 		/>
 	</head>
 	<body>
+		<a class="skip-link" href="#dashboard-content">Skip to content</a>
 		<header class="site-header">
-			<div>
-				<h1>Personal Finance Analytics System</h1>
-			</div>
+			<a class="brand" href="{{ url_for('dashboard') }}">
+				<span class="brand-mark">PF</span>
+				<span>
+					<strong>Personal Finance</strong>
+					<small>Analytics dashboard</small>
+				</span>
+			</a>
+			<nav class="site-nav" aria-label="Dashboard sections">
+				<a href="#overview">Overview</a>
+				<a href="#charts">Charts</a>
+				<a href="#analysis">Analysis</a>
+				<a href="#data-preview">Data</a>
+			</nav>
 		</header>
 
-		<main>
+		<main id="dashboard-content">
 			{% with messages = get_flashed_messages(with_categories=true) %} {%
 			if messages %}
 			<div class="flash-stack">

@@ -7,10 +7,14 @@ from flask import Flask, flash, render_template, request, send_file
 
 from finance_analytics.analytics import (
     build_dashboard_charts,
+    calculate_extended_metrics,
     calculate_metrics,
-    generate_insights,
+    calculate_outlier_sensitivity,
+    generate_all_insights,
     get_category_summary,
+    get_category_semantic_audit,
     get_monthly_summary,
+    get_payment_method_summary,
     get_statistics_table,
 )
 from finance_analytics.data import clean_transactions, load_transactions
@@ -31,10 +35,15 @@ def create_app() -> Flask:
 
         metrics = calculate_metrics(cleaned_data)
         charts = build_dashboard_charts(cleaned_data)
-        insights = generate_insights(cleaned_data, metrics)
+        chart_insights = generate_all_insights(cleaned_data, metrics)
+        insights = chart_insights["overall_summary"]
         monthly_summary = get_monthly_summary(cleaned_data).tail(12)
         category_summary = get_category_summary(cleaned_data).head(10)
+        payment_method_summary = get_payment_method_summary(cleaned_data)
         statistics_table = get_statistics_table(cleaned_data)
+        extended_metrics = calculate_extended_metrics(cleaned_data)
+        outlier_sensitivity = calculate_outlier_sensitivity(cleaned_data)
+        semantic_audit = get_category_semantic_audit(cleaned_data)
 
         return render_template(
             "dashboard.html",
@@ -42,10 +51,15 @@ def create_app() -> Flask:
             metrics=metrics,
             charts=charts,
             insights=insights,
+            chart_insights=chart_insights,
             cleaning_report=cleaning_report,
             monthly_summary=monthly_summary.to_dict("records"),
             category_summary=category_summary.to_dict("records"),
+            payment_method_summary=payment_method_summary.to_dict("records"),
             statistics_table=statistics_table.to_dict("records"),
+            extended_metrics=extended_metrics,
+            outlier_sensitivity=outlier_sensitivity,
+            semantic_audit=semantic_audit,
             cleaned_preview=cleaned_data.head(25).to_dict("records"),
             columns=cleaned_data.columns,
         )
