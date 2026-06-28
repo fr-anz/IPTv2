@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import pandas as pd
 import plotly.express as px
@@ -371,51 +371,62 @@ def generate_recommendations(analysis_results: AnalysisResults) -> list[str]:
 
     recommendations = [
         (
-            "Monitor monthly cash flow by reviewing months where expenses exceed income. "
-            "Use the monthly trend chart to identify whether negative savings are caused "
-            "by recurring expenses, seasonal spending, or one-time transactions."
+            "Keep a close eye on your monthly cash flow, especially in months where "
+            "your expenses are higher than your income. Use the monthly trend chart to "
+            "figure out whether those shortfalls come from regular bills, seasonal "
+            "spending spikes, or one-time big purchases, that way, you know exactly "
+            "where to make adjustments."
         ),
         (
-            "Prioritize the top spending categories before reducing smaller expenses. "
-            f"Since the top three categories represent "
-            f"{analysis_results['top_three_category_concentration']:,.2f}% of total "
-            "expenses, small reductions in these areas can have a stronger effect on "
-            "overall spending."
+            "Start with your biggest spending categories before worrying about the "
+            "smaller ones. Your top three categories alone make up "
+            f"{analysis_results['top_three_category_concentration']:,.2f}% of your "
+            "total expenses, so even a modest cut in those areas will have a much "
+            "bigger impact on your overall budget than trimming many small items."
         ),
     ]
 
     if top_category:
         recommendations.append(
-            f"Review {top_category['name']} transactions and set a category budget if "
-            f"the {top_category['share']:,.2f}% expense share is higher than expected."
+            f"Take a closer look at your {top_category['name']} transactions. It is "
+            f"your single largest spending category at {top_category['share']:,.2f}% "
+            "of total expenses. If that share feels higher than it should be, "
+            "consider setting a monthly spending limit for this category to keep it "
+            "under control."
         )
 
     if highest_expense_month:
         recommendations.append(
-            f"Filter {highest_expense_month['period']} transactions and review the "
-            "largest entries to determine whether the peak spending came from recurring "
-            "bills, seasonal activity, or one-time purchases."
+            f"{highest_expense_month['period']} was your highest-spending month, "
+            "it is worth filtering those transactions and looking at the largest "
+            "entries individually. Understanding whether that peak came from a "
+            "recurring bill, a seasonal expense, or a one-time purchase will help "
+            "you plan better for similar periods in the future."
         )
 
     if dominant_payment_method:
         recommendations.append(
-            f"Group {dominant_payment_method['name']} transactions by category to "
-            "determine whether this payment method is mainly linked to discretionary "
-            "expenses, fixed expenses, or mixed spending."
+            f"Since {dominant_payment_method['name']} is your most-used payment "
+            "method, try grouping those transactions by category. This will quickly "
+            "show you whether most of that spending goes toward essentials, "
+            "discretionary items, or a mix of both, and whether a monthly "
+            "spending cap on this method would be helpful."
         )
 
     if analysis_results["outlier_count"]:
         recommendations.append(
-            "Validate flagged outlier transactions before final interpretation. Outliers "
-            "may represent valid large purchases, but they may also include unusual "
-            "entries or data issues that affect summary totals."
+            "Before drawing any final conclusions from your data, review the "
+            "transactions that were flagged as unusually large. Some of them may "
+            "be legitimate big purchases, but others could be data entry errors "
+            "or duplicates that are inflating your expense totals."
         )
 
     if metrics["net_savings"] < 0:
         recommendations.append(
-            "Set a monthly savings target and compare actual net savings against that "
-            "target after each period to track whether the negative savings pattern is "
-            "improving."
+            "Since your overall net savings is currently negative, it helps to set "
+            "a realistic monthly savings goal and check your progress at the end of "
+            "each period. Even a small, consistent target gives you a clear "
+            "benchmark to measure whether your spending habits are improving over time."
         )
 
     return recommendations[:6]
@@ -441,17 +452,21 @@ def generate_conclusion(analysis_results: AnalysisResults) -> str:
         )
 
     return (
-        "The Personal Finance Analytics System successfully transformed raw transaction "
-        "records into cleaned financial summaries, visualizations, and dashboard insights. "
-        f"The descriptive results identified {', '.join(pattern_parts)}, along with "
-        f"{analysis_results['outlier_count']} flagged outlier transaction(s) and "
-        f"{analysis_results['negative_net_savings_months']} month(s) with negative net "
-        "savings. Overall, the dashboard is useful for financial monitoring because it "
-        "shows where money is spent, which periods need attention, and which categories "
-        "or payment methods should be reviewed first. These findings should be interpreted "
-        "as descriptive results based on the available dataset, not as absolute proof of "
-        "long-term financial behavior. Future improvements could include drill-down views, "
-        "budget alerts, forecasting, and automated category recommendations."
+        "This dashboard successfully turned raw transaction records into clear, "
+        "visual summaries that make personal finance patterns much easier to "
+        "understand. Based on the available data, it identified "
+        f"{', '.join(pattern_parts)}, along with "
+        f"{analysis_results['outlier_count']} transaction(s) flagged as unusually "
+        f"large and {analysis_results['negative_net_savings_months']} month(s) "
+        "where expenses exceeded income. Taken together, these findings paint a "
+        "practical picture of where money is going, which months need the most "
+        "attention, and which spending categories or payment habits are worth "
+        "reviewing first. It is important to treat these results as descriptive "
+        "observations based on the current dataset rather than definitive "
+        "conclusions about long-term financial behavior. Looking ahead, the "
+        "system could be further improved with features like drill-down "
+        "transaction views, customizable budget alerts, spending forecasts, "
+        "and smarter category suggestions."
     )
 
 
@@ -481,13 +496,15 @@ def generate_chart_summaries(analysis_results: AnalysisResults) -> dict[str, dic
                 f"{analysis_results['total_months']} month(s) recorded negative net savings."
             ),
             "recommendation": (
-                "The user should monitor monthly cash flow more consistently, especially "
-                "in months where expenses exceed income. Since "
-                f"{analysis_results['negative_net_savings_months']} months recorded "
-                "negative net savings, the user should review those months and identify "
-                "whether the negative savings were caused by recurring bills, seasonal "
-                "spending, or one-time transactions. A monthly savings target should "
-                "also be set so the user can compare actual savings against a planned goal."
+                "Make it a habit to check your monthly cash flow regularly, paying "
+                "extra attention to the months where your expenses outpaced your "
+                "income. With "
+                f"{analysis_results['negative_net_savings_months']} months in the "
+                "negative, it is worth going back and identifying whether those "
+                "shortfalls were caused by fixed recurring bills, a seasonal spike, "
+                "or a one-time large expense, each has a different solution. "
+                "Setting a monthly savings goal will also give you a clear target "
+                "to compare your actual results against each period."
             ),
             "conclusion": _monthly_trend_conclusion(analysis_results),
         },
@@ -499,12 +516,13 @@ def generate_chart_summaries(analysis_results: AnalysisResults) -> dict[str, dic
                 "expenses."
             ),
             "recommendation": (
-                "The user should focus first on the top three expense categories because "
-                f"they represent {analysis_results['top_three_category_concentration']:,.2f}% "
-                "of total expenses. Instead of reducing all categories equally, the user "
-                "should target the categories with the largest shares, since small reductions "
-                "in these areas can have a stronger effect on total spending. Smaller "
-                "categories may be monitored, but they should not be the first priority."
+                "Rather than trying to cut back on every spending category at once, "
+                "focus your energy on the top three, they account for "
+                f"{analysis_results['top_three_category_concentration']:,.2f}% of "
+                "your total expenses. Reducing spending in those areas, even "
+                "slightly, will have a far greater effect on your overall budget "
+                "than trimming many smaller categories. You can still keep an eye "
+                "on the smaller ones, but they should not be your first priority."
             ),
             "conclusion": _expense_share_conclusion(analysis_results),
         },
@@ -515,12 +533,13 @@ def generate_chart_summaries(analysis_results: AnalysisResults) -> dict[str, dic
                 f"as outliers ({analysis_results['outlier_rate']:,.2f}% of cleaned records)."
             ),
             "recommendation": (
-                f"The user should review the {analysis_results['outlier_count']} flagged "
-                "outlier transactions before making final financial conclusions. These "
-                "transactions may be valid large expenses, but they may also include unusual "
-                "entries or data issues. Reviewing outliers can help confirm whether the "
-                "total expenses and average transaction values accurately represent the "
-                "user's normal spending behavior."
+                f"Before finalizing any conclusions, take a moment to review the "
+                f"{analysis_results['outlier_count']} transaction(s) that were "
+                "flagged as unusually large. They could be legitimate big-ticket "
+                "expenses, but they might also be data entry errors or "
+                "duplicates. Verifying these will ensure that your total expenses "
+                "and average spending figures truly reflect your normal "
+                "day-to-day financial behavior."
             ),
             "conclusion": _amount_distribution_conclusion(analysis_results),
         },
@@ -533,13 +552,15 @@ def generate_chart_summaries(analysis_results: AnalysisResults) -> dict[str, dic
                 f"{top_category['share']:,.2f}% of total expenses."
             ),
             "recommendation": (
-                f"The user should prioritize reviewing the {top_category['name']} category "
-                f"because it is the largest expense category, accounting for "
-                f"{top_category['share']:,.2f}% of total expenses. "
-                f"{top_category['name']} transactions should be checked to determine "
-                "whether they are essential, recurring, or discretionary. If many "
-                f"{top_category['name']} expenses are non-essential, the user should set "
-                "a monthly or quarterly budget limit for this category."
+                f"Give your {top_category['name']} spending a closer look, it is "
+                f"your largest expense category, representing "
+                f"{top_category['share']:,.2f}% of total expenses. Go through "
+                f"those transactions and ask whether each one is a must-have "
+                "recurring bill, a one-time purchase, or something that could "
+                f"be reduced. If a significant portion of your {top_category['name']} "
+                "spending is discretionary, setting a monthly or quarterly budget "
+                "cap for this category is a practical first step toward better "
+                "financial control."
             ),
             "conclusion": _top_category_conclusion(analysis_results),
         }
@@ -566,13 +587,16 @@ def generate_chart_summaries(analysis_results: AnalysisResults) -> dict[str, dic
                 f"representing {dominant_payment_method['share']:,.2f}% of total expenses."
             ),
             "recommendation": (
-                f"The user should monitor {dominant_payment_method['name']} spending closely "
-                f"because it represents {dominant_payment_method['share']:,.2f}% of total "
-                f"expenses. {dominant_payment_method['name']} transactions should be grouped "
-                "by category to identify whether they are mostly connected to Travel, Food "
-                "& Drink, Entertainment, or other discretionary expenses. Setting a monthly "
-                f"{dominant_payment_method['name'].lower()} spending limit can help prevent "
-                "overspending through this payment method."
+                f"Keep a close watch on your {dominant_payment_method['name']} "
+                f"spending, it makes up {dominant_payment_method['share']:,.2f}% "
+                "of your total expenses, making it the most significant payment "
+                f"channel in your data. Try grouping your "
+                f"{dominant_payment_method['name']} transactions by spending "
+                "category to see which areas, such as food, travel, or "
+                "entertainment, are driving the bulk of that spending. "
+                f"Setting a monthly {dominant_payment_method['name'].lower()} "
+                "budget limit is a simple and effective way to stay in control "
+                "of this channel."
             ),
             "conclusion": _payment_method_conclusion(analysis_results),
         }
@@ -604,63 +628,70 @@ def _monthly_trend_conclusion(analysis_results: AnalysisResults) -> str:
     )
 
     return (
-        "The monthly trend shows that the user's cash flow changes significantly across "
-        f"the covered period. {savings_phrase} "
-        f"{analysis_results['negative_net_savings_months']} months recorded negative net "
-        "savings, meaning expenses exceeded income in several periods. "
-        f"{peak_phrase}This indicates that monthly financial performance is not fully "
-        "stable and should be reviewed regularly to identify periods of overspending."
+        "Looking at the monthly trend, it is clear that cash flow shifts "
+        f"noticeably from one period to the next. {savings_phrase} "
+        f"{analysis_results['negative_net_savings_months']} month(s) ended with "
+        "expenses exceeding income which is a sign that spending is not fully consistent "
+        "throughout the year. "
+        f"{peak_phrase}This tells us that financial performance fluctuates and "
+        "that some months require more careful attention than others. Regular "
+        "monthly check-ins would make it much easier to catch overspending "
+        "early before it compounds."
     )
 
 
 def _top_category_conclusion(analysis_results: AnalysisResults) -> str:
     top_category = analysis_results["top_category"]
     return (
-        "The top expense categories show that spending is heavily concentrated in a few "
-        f"areas. {top_category['name']} is the largest expense category, accounting for "
-        f"{top_category['share']:,.2f}% of total expenses. This means that "
-        f"{top_category['name']} has the strongest effect on overall spending compared "
-        "with the other categories. Since a large portion of expenses comes from this "
-        "category, it should be one of the main areas to review when planning a budget."
+        "The breakdown of top expense categories makes it clear that spending "
+        "is heavily concentrated in just a few areas rather than spread evenly. "
+        f"{top_category['name']} stands out as the single largest category, "
+        f"making up {top_category['share']:,.2f}% of total expenses. Because "
+        f"such a large share of spending flows through {top_category['name']}, "
+        "it carries the most weight when it comes to budget planning, "
+        "meaning any effort to reduce overall expenses should start here."
     )
 
 
 def _expense_share_conclusion(analysis_results: AnalysisResults) -> str:
     return (
-        "The expense share chart shows how total expenses are distributed across "
-        "different categories. The top three expense categories represent "
-        f"{analysis_results['top_three_category_concentration']:,.2f}% of total expenses "
-        f"across {analysis_results['category_count']} categories, which means that "
-        "spending is concentrated in a small number of areas rather than evenly spread "
-        "across all categories. This suggests that budget improvements should focus "
-        "first on the largest categories, because changes in those areas would have the "
-        "greatest effect on total expenses."
+        "The expense share chart reveals how unevenly spending is distributed "
+        "across categories. Out of "
+        f"{analysis_results['category_count']} categories, just the top three "
+        f"account for {analysis_results['top_three_category_concentration']:,.2f}% "
+        "of total expenses, which means a small number of spending areas are "
+        "driving the majority of costs. This pattern strongly suggests that "
+        "budget improvements will be most effective when focused on those "
+        "dominant categories first, rather than applying small cuts across "
+        "the board."
     )
 
 
 def _amount_distribution_conclusion(analysis_results: AnalysisResults) -> str:
     return (
-        "The transaction amount distribution shows that most transactions fall within "
-        f"the {analysis_results['amount_band']} amount band, while "
-        f"{analysis_results['outlier_count']} transactions were flagged as outliers. "
-        "This means that the dataset contains several unusually large transactions that "
-        "may affect totals, averages, and spending patterns. These outlier transactions "
-        "should be reviewed before making final financial conclusions, because they may "
-        "represent valid large expenses or possible data issues."
+        "The transaction amount distribution shows that the majority of "
+        f"transactions cluster within the {analysis_results['amount_band']} "
+        "range, which represents the typical day-to-day spending pattern. "
+        f"However, {analysis_results['outlier_count']} transaction(s) were "
+        "identified as unusually large and stand apart from the rest. These "
+        "outliers can skew totals and averages, making spending look higher "
+        "than it normally is. It is a good idea to verify each one before "
+        "drawing any firm conclusions about overall financial behavior."
     )
 
 
 def _payment_method_conclusion(analysis_results: AnalysisResults) -> str:
     dominant_payment_method = analysis_results["dominant_payment_method"]
     return (
-        f"The payment method chart shows that {dominant_payment_method['name']} is the "
-        "most used payment method by expense total, representing "
-        f"{dominant_payment_method['share']:,.2f}% of total expenses. This indicates "
-        f"that a large share of spending is connected to "
-        f"{dominant_payment_method['name'].lower()} transactions. Since "
-        f"{dominant_payment_method['name'].lower()} spending makes up the biggest "
-        "portion of payment-based expenses, it should be monitored closely and compared "
-        "with the categories where it is most frequently used."
+        f"The payment method chart shows that {dominant_payment_method['name']} "
+        "is by far the most-used method when it comes to total expense volume, "
+        f"accounting for {dominant_payment_method['share']:,.2f}% of all "
+        "expenses. This means that a significant portion of overall spending "
+        f"flows through {dominant_payment_method['name'].lower()} transactions. "
+        "Understanding which spending categories are most closely tied to this "
+        "payment method will give a clearer picture of whether that reliance "
+        "is driven by necessity or discretionary habits, and whether any "
+        "adjustments are worth making."
     )
 
 

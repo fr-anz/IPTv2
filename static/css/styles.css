@@ -360,6 +360,8 @@ section.panel {
   color: var(--text);
   font-size: 0.88rem;
   line-height: 1.55;
+  text-align: justify;
+  text-indent: 1.5em;
 }
 
 .report-list {
