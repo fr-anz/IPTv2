@@ -3,6 +3,7 @@ import pandas as pd
 from app import create_app
 from finance_analytics.analytics import (
     build_dashboard_analysis_results,
+    build_dashboard_charts,
     calculate_extended_metrics,
     calculate_metrics,
     calculate_outlier_sensitivity,
@@ -116,6 +117,26 @@ def test_grouped_summaries_are_ready_for_charts():
     assert monthly.loc[0, "period"] == "2024-01"
     assert monthly.loc[0, "net_savings"] == 2500
     assert categories.loc[0, "category"] == "Food"
+
+
+def test_expense_share_chart_includes_every_category():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": "2024-01-01",
+                "Transaction Description": f"Expense {index}",
+                "Category": f"Category {index}",
+                "Amount": index * 10,
+                "Type": "Expense",
+            }
+            for index in range(1, 10)
+        ]
+    )
+
+    cleaned, _ = clean_transactions(raw)
+    charts = build_dashboard_charts(cleaned)
+
+    assert "Category 1" in charts["pie_chart"]
 
 
 def test_extended_analysis_metrics_are_computed():

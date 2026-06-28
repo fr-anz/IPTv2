@@ -206,7 +206,7 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
         color_discrete_map=MEASURE_COLORS,
     )
     pie_chart = px.pie(
-        categories.head(8),
+        categories,
         values="total_amount",
         names="category",
         hole=0.56,
