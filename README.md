@@ -7,9 +7,9 @@ The app analyzes the raw project dataset, cleans the data in memory, computes de
 ## Features
 
 - Loads the raw project CSV dataset or an uploaded CSV with the same core columns.
-- Cleans and preprocesses records by renaming columns, converting data types, removing duplicates, filtering invalid rows, normalizing text, and capping amount outliers.
+- Cleans and preprocesses records by renaming columns, converting data types, removing duplicates, filtering invalid rows, and normalizing text.
 - Standardizes the added `Payment Method` attribute, including blank and inconsistent values.
-- Adds derived analytics attributes such as period, quarter, signed amount, amount band, and outlier flag.
+- Adds derived analytics attributes such as period, quarter, signed amount, amount band, and a non-mutating outlier flag calculated separately for income and expense records.
 - Computes totals, averages, median, mode, standard deviation, min, max, savings rate, category rankings, and monthly trends.
 - Generates the required chart types: bar graph, line graph, pie chart, and histogram, plus a payment method expense chart.
 - Exports a cleaned CSV for project submission.

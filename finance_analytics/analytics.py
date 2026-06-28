@@ -25,8 +25,8 @@ MEASURE_COLORS = {
 
 
 def calculate_metrics(data: pd.DataFrame) -> dict[str, float | int | str]:
-    income = data.loc[data["transaction_type"].eq("Income"), "amount_cleaned"].sum()
-    expense = data.loc[data["transaction_type"].eq("Expense"), "amount_cleaned"].sum()
+    income = data.loc[data["transaction_type"].eq("Income"), "amount"].sum()
+    expense = data.loc[data["transaction_type"].eq("Expense"), "amount"].sum()
     net_savings = income - expense
     savings_rate = (net_savings / income * 100) if income else 0
 
@@ -36,9 +36,9 @@ def calculate_metrics(data: pd.DataFrame) -> dict[str, float | int | str]:
         "total_expense": round(float(expense), 2),
         "net_savings": round(float(net_savings), 2),
         "savings_rate": round(float(savings_rate), 2),
-        "average_transaction": round(float(data["amount_cleaned"].mean()), 2),
-        "median_transaction": round(float(data["amount_cleaned"].median()), 2),
-        "largest_transaction": round(float(data["amount_cleaned"].max()), 2),
+        "average_transaction": round(float(data["amount"].mean()), 2),
+        "median_transaction": round(float(data["amount"].median()), 2),
+        "largest_transaction": round(float(data["amount"].max()), 2),
         "date_range": f"{data['date'].min().date()} to {data['date'].max().date()}",
     }
 
@@ -48,7 +48,7 @@ def get_monthly_summary(data: pd.DataFrame) -> pd.DataFrame:
         data.pivot_table(
             index="period",
             columns="transaction_type",
-            values="amount_cleaned",
+            values="amount",
             aggfunc="sum",
             fill_value=0,
         )
@@ -68,7 +68,7 @@ def get_category_summary(data: pd.DataFrame) -> pd.DataFrame:
     expenses = data.loc[data["transaction_type"].eq("Expense")]
     summary = (
         expenses.groupby("category", as_index=False)
-        .agg(total_amount=("amount_cleaned", "sum"), transaction_count=("amount_cleaned", "size"))
+        .agg(total_amount=("amount", "sum"), transaction_count=("amount", "size"))
         .sort_values("total_amount", ascending=False)
     )
     total_expenses = summary["total_amount"].sum()
@@ -81,7 +81,7 @@ def get_payment_method_summary(data: pd.DataFrame) -> pd.DataFrame:
     expenses = data.loc[data["transaction_type"].eq("Expense")]
     summary = (
         expenses.groupby("payment_method", as_index=False)
-        .agg(total_amount=("amount_cleaned", "sum"), transaction_count=("amount_cleaned", "size"))
+        .agg(total_amount=("amount", "sum"), transaction_count=("amount", "size"))
         .sort_values("total_amount", ascending=False)
     )
     total_expenses = summary["total_amount"].sum()
@@ -102,8 +102,8 @@ def calculate_extended_metrics(data: pd.DataFrame) -> dict[str, float | int]:
     )
     outlier_count = int(data["is_outlier"].sum()) if "is_outlier" in data else 0
     outlier_rate = (outlier_count / len(data) * 100) if len(data) else 0
-    expense_mean = expenses["amount_cleaned"].mean() if not expenses.empty else 0
-    expense_median = expenses["amount_cleaned"].median() if not expenses.empty else 0
+    expense_mean = expenses["amount"].mean() if not expenses.empty else 0
+    expense_median = expenses["amount"].median() if not expenses.empty else 0
     monthly_variance = monthly["net_savings"].var()
     monthly_standard_deviation = monthly["net_savings"].std()
 
@@ -128,30 +128,26 @@ def calculate_extended_metrics(data: pd.DataFrame) -> dict[str, float | int]:
     }
 
 
-def calculate_outlier_sensitivity(data: pd.DataFrame) -> dict[str, float | int]:
-    income = data["transaction_type"].eq("Income")
-    expense = data["transaction_type"].eq("Expense")
-
-    uncapped_income = data.loc[income, "amount"].sum()
-    capped_income = data.loc[income, "amount_cleaned"].sum()
-    uncapped_expense = data.loc[expense, "amount"].sum()
-    capped_expense = data.loc[expense, "amount_cleaned"].sum()
-    uncapped_net = uncapped_income - uncapped_expense
-    capped_net = capped_income - capped_expense
-    outlier_count = int(data["is_outlier"].sum()) if "is_outlier" in data else 0
+def get_outlier_audit(data: pd.DataFrame) -> dict[str, float | int | str]:
+    flagged = data.loc[data["is_outlier"]] if "is_outlier" in data else data.iloc[0:0]
+    flagged_count = int(len(flagged))
+    category_counts = flagged["category"].value_counts()
 
     return {
-        "uncapped_income": round(float(uncapped_income), 2),
-        "capped_income": round(float(capped_income), 2),
-        "income_change": round(float(capped_income - uncapped_income), 2),
-        "uncapped_expense": round(float(uncapped_expense), 2),
-        "capped_expense": round(float(capped_expense), 2),
-        "expense_change": round(float(capped_expense - uncapped_expense), 2),
-        "uncapped_net_savings": round(float(uncapped_net), 2),
-        "capped_net_savings": round(float(capped_net), 2),
-        "net_savings_change": round(float(capped_net - uncapped_net), 2),
-        "outliers_capped": outlier_count,
-        "outlier_transaction_rate": round((outlier_count / len(data) * 100) if len(data) else 0, 2),
+        "flagged_transactions": flagged_count,
+        "outlier_transaction_rate": round(
+            (flagged_count / len(data) * 100) if len(data) else 0,
+            2,
+        ),
+        "flagged_income_count": int(flagged["transaction_type"].eq("Income").sum()),
+        "flagged_expense_count": int(flagged["transaction_type"].eq("Expense").sum()),
+        "flagged_total_amount": round(float(flagged["amount"].sum()), 2),
+        "largest_flagged_amount": round(float(flagged["amount"].max()), 2)
+        if flagged_count
+        else 0,
+        "top_flagged_category": str(category_counts.index[0])
+        if not category_counts.empty
+        else "None",
     }
 
 
@@ -164,21 +160,21 @@ def get_category_semantic_audit(data: pd.DataFrame) -> dict[str, float | int | b
     return {
         "has_salary_expenses": bool(len(salary_expenses)),
         "salary_expense_count": int(len(salary_expenses)),
-        "salary_expense_total": round(float(salary_expenses["amount_cleaned"].sum()), 2),
+        "salary_expense_total": round(float(salary_expenses["amount"].sum()), 2),
         "salary_income_count": int(len(salary_income)),
-        "salary_income_total": round(float(salary_income["amount_cleaned"].sum()), 2),
+        "salary_income_total": round(float(salary_income["amount"].sum()), 2),
     }
 
 
 def get_statistics_table(data: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
         [
-            {"metric": "Mean", "value": data["amount_cleaned"].mean()},
-            {"metric": "Median", "value": data["amount_cleaned"].median()},
-            {"metric": "Mode", "value": data["amount_cleaned"].mode().iloc[0]},
-            {"metric": "Standard Deviation", "value": data["amount_cleaned"].std()},
-            {"metric": "Minimum", "value": data["amount_cleaned"].min()},
-            {"metric": "Maximum", "value": data["amount_cleaned"].max()},
+            {"metric": "Mean", "value": data["amount"].mean()},
+            {"metric": "Median", "value": data["amount"].median()},
+            {"metric": "Mode", "value": data["amount"].mode().iloc[0]},
+            {"metric": "Standard Deviation", "value": data["amount"].std()},
+            {"metric": "Minimum", "value": data["amount"].min()},
+            {"metric": "Maximum", "value": data["amount"].max()},
         ]
     ).assign(value=lambda frame: frame["value"].round(2))
 
@@ -214,9 +210,9 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
     )
     histogram = px.histogram(
         data,
-        x="amount_cleaned",
+        x="amount",
         color="transaction_type",
-        labels={"amount_cleaned": "Transaction Amount", "transaction_type": "Type"},
+        labels={"amount": "Transaction Amount", "transaction_type": "Type"},
         nbins=30,
         color_discrete_map=MEASURE_COLORS,
     )
@@ -247,7 +243,7 @@ def build_dashboard_analysis_results(
     categories = get_category_summary(data)
     payment_methods = get_payment_method_summary(data)
     extended_metrics = calculate_extended_metrics(data)
-    outlier_sensitivity = calculate_outlier_sensitivity(data)
+    outlier_audit = get_outlier_audit(data)
 
     highest_expense_month = None
     if not monthly.empty and monthly["Expense"].sum() > 0:
@@ -293,8 +289,8 @@ def build_dashboard_analysis_results(
         "top_three_category_concentration": extended_metrics["top_three_category_concentration"],
         "category_count": int(len(categories)),
         "dominant_payment_method": dominant_payment_method,
-        "outlier_count": outlier_sensitivity["outliers_capped"],
-        "outlier_rate": outlier_sensitivity["outlier_transaction_rate"],
+        "outlier_count": outlier_audit["flagged_transactions"],
+        "outlier_rate": outlier_audit["outlier_transaction_rate"],
         "amount_band": amount_band,
         "income_count": int(data["transaction_type"].eq("Income").sum()),
         "expense_count": int(data["transaction_type"].eq("Expense").sum()),
@@ -1081,7 +1077,7 @@ def detect_data_quality_warnings(data: pd.DataFrame) -> list[Insight]:
                 "overall_summary",
                 (
                     f"Salary appears under expense categories in {len(salary_expenses)} "
-                    f"record(s), totaling {salary_expenses['amount_cleaned'].sum():,.2f}."
+                    f"record(s), totaling {salary_expenses['amount'].sum():,.2f}."
                 ),
                 (
                     "This should be reviewed because salary is normally classified as income "

@@ -2,7 +2,7 @@
 
 ## Dataset Overview
 
-The project uses a personal finance transaction dataset for analyzing income, expenses, spending categories, payment methods, monthly trends, and savings behavior. The raw project dataset contains 1,505 transaction records and 6 attributes. After cleaning and preprocessing, the analytics-ready dataset contains 1,494 records and 15 attributes.
+The project uses a personal finance transaction dataset for analyzing income, expenses, spending categories, payment methods, monthly trends, and savings behavior. The raw project dataset contains 1,505 transaction records and 6 attributes. After cleaning and preprocessing, the analytics-ready dataset contains 1,494 records and 14 attributes.
 
 ## Raw Dataset Data Dictionary
 
@@ -22,11 +22,10 @@ The project uses a personal finance transaction dataset for analyzing income, ex
 | date | Cleaned transaction date. | Date | 2020-01-02 | Used for time-based analysis. |
 | description | Cleaned transaction description. | Text | Score each. | Provides transaction context. |
 | category | Standardized transaction category. | Text | Food & Drink | Used for category-level summaries and charts. |
-| amount | Parsed transaction amount. | Numeric | 1485.69 | Original valid numeric amount after conversion. |
+| amount | Parsed transaction amount. | Numeric | 1485.69 | Authoritative validated value used in all financial calculations. |
 | transaction_type | Standardized transaction type. | Text | Expense | Separates income and expense records. |
 | payment_method | Standardized payment method. | Text | Bank Transfer | Used for payment behavior analysis. |
-| is_outlier | Indicates whether the transaction exceeded the outlier threshold. | Boolean | False | Supports outlier review. |
-| amount_cleaned | Amount after outlier capping. | Numeric | 1485.69 | Used for stable analytics and visualizations. |
+| is_outlier | Indicates whether the transaction exceeded the IQR threshold for its transaction type. | Boolean | False | Supports review without modifying the amount. |
 | year | Transaction year. | Integer | 2020 | Supports yearly grouping. |
 | month | Transaction month number. | Integer | 1 | Supports monthly sorting and grouping. |
 | month_name | Transaction month name. | Text | January | Improves chart readability. |
@@ -62,20 +61,20 @@ Observed category labels included both standardized and inconsistent forms, such
 | Audit Item | Result |
 | --- | ---: |
 | Total rows | 1,494 |
-| Total attributes | 15 |
+| Total attributes | 14 |
 | Duplicate rows | 0 |
 | Missing or blank values | 0 |
 | Invalid date rows | 0 |
 | Invalid or non-positive amount rows | 0 |
 | Invalid transaction type rows | 0 |
 | Date range | 2020-01-02 to 2024-12-29 |
-| Cleaned amount range | 14.37 to 3,342.01 |
+| Validated amount range | 92.58 to 4,345.50 |
 
 ### Cleaned Data Quality Results
 
 After preprocessing, the dataset was made suitable for analytics. Duplicate records were removed, missing text values were filled with `Unknown`, date values were parsed into a consistent date format, invalid dates were removed, amount values were converted to numeric format, invalid and non-positive amounts were removed, transaction types were standardized to `Income` and `Expense`, and payment methods were standardized into consistent labels.
 
-The cleaned dataset also includes engineered analytics attributes for year, month, month name, monthly period, quarter, signed amount, outlier flag, cleaned amount, and amount band. These fields support descriptive statistics, monthly trend analysis, category comparisons, payment method analysis, and dashboard visualizations.
+The cleaned dataset also includes engineered analytics attributes for year, month, month name, monthly period, quarter, signed amount, a non-mutating outlier flag, and amount band. These fields support descriptive statistics, monthly trend analysis, category comparisons, payment method analysis, and dashboard visualizations.
 
 ## Standardized Values
 
@@ -83,7 +82,7 @@ The cleaned dataset also includes engineered analytics attributes for year, mont
 | --- | --- |
 | transaction_type | Expense, Income |
 | payment_method | Bank Transfer, Cash, Credit Card, Debit Card, E-Wallet, Unknown |
-| category | Entertainment, Food & Drink, Health & Fitness, Investment, Other, Rent, Salary, Shopping, Travel, Unknown, Utilities |
+| category | Entertainment, Food & Drink, Groceries, Healthcare, Rent, Shopping, Transportation, Travel, Utilities |
 
 ## Preprocessing Summary
 
@@ -96,5 +95,5 @@ The cleaned dataset also includes engineered analytics attributes for year, mont
 | Amount conversion | Removed formatting characters and converted values to numeric form. |
 | Invalid amount filtering | Removed non-numeric, zero, and negative transaction amounts. |
 | Transaction type validation | Kept only valid `Income` and `Expense` records. |
-| Outlier treatment | Capped high transaction amounts using an IQR-based threshold. |
-| Feature engineering | Added time, signed amount, outlier, cleaned amount, and amount band attributes. |
+| Outlier review | Flagged high values using separate income and expense IQR thresholds without changing transaction amounts. |
+| Feature engineering | Added time, signed amount, outlier, and amount band attributes. |

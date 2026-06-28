@@ -223,8 +223,8 @@ Analytics{% endblock %} {% block content %} {% macro graph_summary(summary) %}
 					<dd>{{ cleaning_report.unknown_categories_remaining }}</dd>
 				</div>
 				<div>
-					<dt>Outliers capped</dt>
-					<dd>{{ cleaning_report.outliers_capped }}</dd>
+					<dt>Outliers flagged</dt>
+					<dd>{{ cleaning_report.outliers_flagged }}</dd>
 				</div>
 			</dl>
 			<p class="compact-text">
@@ -355,74 +355,49 @@ Analytics{% endblock %} {% block content %} {% macro graph_summary(summary) %}
 
 	<section class="panel">
 		<div class="section-heading">
-			<h2>Outlier Sensitivity</h2>
+			<h2>Outlier Audit</h2>
 		</div>
 		<table>
 			<thead>
 				<tr>
 					<th>Metric</th>
-					<th>Before Capping</th>
-					<th>After Capping</th>
-					<th>Change</th>
+					<th>Value</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
-					<td>Income</td>
-					<td>
-						{{ "{:,.2f}".format(outlier_sensitivity.uncapped_income)
-						}}
-					</td>
-					<td>
-						{{ "{:,.2f}".format(outlier_sensitivity.capped_income)
-						}}
-					</td>
-					<td>
-						{{ "{:,.2f}".format(outlier_sensitivity.income_change)
-						}}
-					</td>
+					<td>Flagged transactions</td>
+					<td>{{ outlier_audit.flagged_transactions }}</td>
 				</tr>
 				<tr>
-					<td>Expenses</td>
-					<td>
-						{{
-						"{:,.2f}".format(outlier_sensitivity.uncapped_expense)
-						}}
-					</td>
-					<td>
-						{{ "{:,.2f}".format(outlier_sensitivity.capped_expense)
-						}}
-					</td>
-					<td>
-						{{ "{:,.2f}".format(outlier_sensitivity.expense_change)
-						}}
-					</td>
+					<td>Flagged transaction rate</td>
+					<td>{{ "{:,.2f}".format(outlier_audit.outlier_transaction_rate) }}%</td>
 				</tr>
 				<tr>
-					<td>Net savings</td>
-					<td>
-						{{
-						"{:,.2f}".format(outlier_sensitivity.uncapped_net_savings)
-						}}
-					</td>
-					<td>
-						{{
-						"{:,.2f}".format(outlier_sensitivity.capped_net_savings)
-						}}
-					</td>
-					<td>
-						{{
-						"{:,.2f}".format(outlier_sensitivity.net_savings_change)
-						}}
-					</td>
+					<td>Flagged income transactions</td>
+					<td>{{ outlier_audit.flagged_income_count }}</td>
+				</tr>
+				<tr>
+					<td>Flagged expense transactions</td>
+					<td>{{ outlier_audit.flagged_expense_count }}</td>
+				</tr>
+				<tr>
+					<td>Flagged total amount</td>
+					<td>{{ "{:,.2f}".format(outlier_audit.flagged_total_amount) }}</td>
+				</tr>
+				<tr>
+					<td>Largest flagged amount</td>
+					<td>{{ "{:,.2f}".format(outlier_audit.largest_flagged_amount) }}</td>
+				</tr>
+				<tr>
+					<td>Top flagged category</td>
+					<td>{{ outlier_audit.top_flagged_category }}</td>
 				</tr>
 			</tbody>
 		</table>
 		<p class="compact-text">
-			{{ outlier_sensitivity.outliers_capped }} transactions were capped,
-			equal to {{
-			"{:,.2f}".format(outlier_sensitivity.outlier_transaction_rate) }}%
-			of cleaned records.
+			Outliers are flagged within income and expense records separately. Validated
+			transaction amounts are preserved and used unchanged in all financial totals.
 		</p>
 	</section>
 

@@ -87,7 +87,7 @@ class CleaningReport:
     salary_records_kept_as_expense: int
     unknown_categories_inferred: int
     unknown_categories_remaining: int
-    outliers_capped: int
+    outliers_flagged: int
     engineered_columns: list[str]
 
     def as_dict(self) -> dict[str, int | list[str]]:
@@ -106,7 +106,7 @@ class CleaningReport:
             "salary_records_kept_as_expense": self.salary_records_kept_as_expense,
             "unknown_categories_inferred": self.unknown_categories_inferred,
             "unknown_categories_remaining": self.unknown_categories_remaining,
-            "outliers_capped": self.outliers_capped,
+            "outliers_flagged": self.outliers_flagged,
             "engineered_columns": self.engineered_columns,
         }
 
@@ -164,10 +164,11 @@ def clean_transactions(raw_data: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, 
     unknown_categories_remaining = int(data["category"].eq("Unknown").sum())
     salary_review = _review_salary_expense_records(data)
 
-    outlier_cap = _calculate_iqr_upper_cap(data["amount"])
-    data["is_outlier"] = data["amount"] > outlier_cap
-    outliers_capped = int(data["is_outlier"].sum())
-    data["amount_cleaned"] = data["amount"].clip(upper=outlier_cap).round(2)
+    outlier_thresholds = data.groupby("transaction_type")["amount"].transform(
+        _calculate_iqr_upper_threshold
+    )
+    data["is_outlier"] = data["amount"] > outlier_thresholds
+    outliers_flagged = int(data["is_outlier"].sum())
 
     data["year"] = data["date"].dt.year
     data["month"] = data["date"].dt.month
@@ -176,11 +177,11 @@ def clean_transactions(raw_data: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, 
     data["quarter"] = "Q" + data["date"].dt.quarter.astype(str)
     data["signed_amount"] = np.where(
         data["transaction_type"].eq("Income"),
-        data["amount_cleaned"],
-        -data["amount_cleaned"],
+        data["amount"],
+        -data["amount"],
     )
     data["amount_band"] = pd.cut(
-        data["amount_cleaned"],
+        data["amount"],
         bins=[0, 500, 1000, 2000, np.inf],
         labels=["Low", "Medium", "High", "Very High"],
         include_lowest=True,
@@ -189,7 +190,6 @@ def clean_transactions(raw_data: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, 
     data = data.sort_values("date").reset_index(drop=True)
 
     engineered_columns = [
-        "amount_cleaned",
         "is_outlier",
         "year",
         "month",
@@ -214,14 +214,14 @@ def clean_transactions(raw_data: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, 
         salary_records_kept_as_expense=salary_review["kept_as_expense"],
         unknown_categories_inferred=unknown_categories_inferred,
         unknown_categories_remaining=unknown_categories_remaining,
-        outliers_capped=outliers_capped,
+        outliers_flagged=outliers_flagged,
         engineered_columns=engineered_columns,
     )
 
     return data, report.as_dict()
 
 
-def _calculate_iqr_upper_cap(series: pd.Series) -> float:
+def _calculate_iqr_upper_threshold(series: pd.Series) -> float:
     q1 = series.quantile(0.25)
     q3 = series.quantile(0.75)
     iqr = q3 - q1

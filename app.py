@@ -10,12 +10,12 @@ from finance_analytics.analytics import (
     build_dashboard_charts,
     calculate_extended_metrics,
     calculate_metrics,
-    calculate_outlier_sensitivity,
     generate_all_insights,
     generate_dashboard_summary,
     get_category_summary,
     get_category_semantic_audit,
     get_monthly_summary,
+    get_outlier_audit,
     get_payment_method_summary,
     get_statistics_table,
 )
@@ -46,7 +46,7 @@ def create_app() -> Flask:
         payment_method_summary = get_payment_method_summary(cleaned_data)
         statistics_table = get_statistics_table(cleaned_data)
         extended_metrics = calculate_extended_metrics(cleaned_data)
-        outlier_sensitivity = calculate_outlier_sensitivity(cleaned_data)
+        outlier_audit = get_outlier_audit(cleaned_data)
         semantic_audit = get_category_semantic_audit(cleaned_data)
 
         return render_template(
@@ -63,7 +63,7 @@ def create_app() -> Flask:
             payment_method_summary=payment_method_summary.to_dict("records"),
             statistics_table=statistics_table.to_dict("records"),
             extended_metrics=extended_metrics,
-            outlier_sensitivity=outlier_sensitivity,
+            outlier_audit=outlier_audit,
             semantic_audit=semantic_audit,
             cleaned_preview=cleaned_data.head(25).to_dict("records"),
             columns=cleaned_data.columns,

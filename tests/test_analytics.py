@@ -6,13 +6,13 @@ from finance_analytics.analytics import (
     build_dashboard_charts,
     calculate_extended_metrics,
     calculate_metrics,
-    calculate_outlier_sensitivity,
     generate_all_insights,
     generate_dashboard_summary,
     generate_insights,
     get_category_semantic_audit,
     get_category_summary,
     get_monthly_summary,
+    get_outlier_audit,
     get_payment_method_summary,
 )
 from finance_analytics.data import clean_transactions
@@ -195,7 +195,7 @@ def test_extended_analysis_metrics_are_computed():
 
     cleaned, _ = clean_transactions(raw)
     extended = calculate_extended_metrics(cleaned)
-    sensitivity = calculate_outlier_sensitivity(cleaned)
+    outlier_audit = get_outlier_audit(cleaned)
     payment_methods = get_payment_method_summary(cleaned)
     insights = generate_insights(cleaned, calculate_metrics(cleaned))
 
@@ -204,12 +204,35 @@ def test_extended_analysis_metrics_are_computed():
     assert extended["positive_savings_month_share"] == 50
     assert extended["top_three_category_concentration"] == 100
     assert extended["expense_mean_median_gap"] == 75
-    assert sensitivity["capped_net_savings"] == sensitivity["uncapped_net_savings"]
+    assert outlier_audit["flagged_transactions"] == 0
     assert payment_methods.iloc[0]["payment_method"] == "Credit Card"
     assert len(insights) >= 4
     assert {"title", "chart_id", "finding", "interpretation", "recommendation", "severity"}.issubset(
         insights[0]
     )
+
+
+def test_outlier_flags_do_not_change_transaction_amounts_or_financial_totals():
+    raw = pd.DataFrame(
+        [
+            {
+                "Date": f"2024-01-0{index}",
+                "Transaction Description": "Salary",
+                "Category": "Salary",
+                "Amount": amount,
+                "Type": "Income",
+            }
+            for index, amount in enumerate([1000, 1100, 1200, 10000], start=1)
+        ]
+    )
+
+    cleaned, report = clean_transactions(raw)
+    metrics = calculate_metrics(cleaned)
+
+    assert report["outliers_flagged"] == 1
+    assert cleaned.loc[cleaned["is_outlier"], "amount"].iloc[0] == 10000
+    assert metrics["total_income"] == 13300
+    assert metrics["net_savings"] == 13300
 
 
 def test_salary_expense_records_are_reclassified_or_kept_by_description():
@@ -287,13 +310,13 @@ def test_dashboard_renders_gap_closure_sections():
     assert "Conclusion" in html
     assert html.index("Conclusion") < html.index("Recommendation")
     assert "Top expense categories" in html
-    assert "monthly trend shows" in html
-    assert "Review" in html
+    assert "monthly trend" in html.lower()
+    assert "review" in html.lower()
     assert "Cleaning Report" in html
     assert "Advanced Analysis" in html
     assert "Monthly Summary" in html
     assert "Payment Method Summary" in html
-    assert "Outlier Sensitivity" in html
+    assert "Outlier Audit" in html
     assert "Dataset semantic audit" not in html
     assert "No salary-as-expense issue was detected" not in html
     assert "Salary records reclassified as income" in html
@@ -346,12 +369,12 @@ def test_dashboard_summary_groups_dynamic_financial_story():
     assert "Credit Card" in " ".join(summary["recommendations"])
     assert "Rent" in summary["charts"]["top_expense_categories"]["key_insight"]
     assert "Credit Card" in summary["charts"]["payment_method_expenses"]["recommendation"]
-    assert "The user should monitor monthly cash flow more consistently" in summary["charts"]["monthly_trends"]["recommendation"]
-    assert "The user should prioritize reviewing the Rent category" in summary["charts"]["top_expense_categories"]["recommendation"]
-    assert "The user should review the" in summary["charts"]["transaction_amount_distribution"]["recommendation"]
-    assert "Rent is the largest expense category" in summary["charts"]["top_expense_categories"]["conclusion"]
-    assert "Credit Card is the most used payment method" in summary["charts"]["payment_method_expenses"]["conclusion"]
-    assert "descriptive results based on the available dataset" in summary["conclusion"]
+    assert "check your monthly cash flow regularly" in summary["charts"]["monthly_trends"]["recommendation"]
+    assert "Rent spending a closer look" in summary["charts"]["top_expense_categories"]["recommendation"]
+    assert "review" in summary["charts"]["transaction_amount_distribution"]["recommendation"]
+    assert "Rent stands out" in summary["charts"]["top_expense_categories"]["conclusion"]
+    assert "Credit Card" in summary["charts"]["payment_method_expenses"]["conclusion"]
+    assert "descriptive observations based on the current dataset" in summary["conclusion"]
 
 
 def test_graph_specific_insights_cover_required_findings():

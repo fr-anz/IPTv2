@@ -37,7 +37,7 @@ def main() -> None:
     print(f"Invalid dates removed: {report['invalid_date_rows_removed']}")
     print(f"Invalid types removed: {report['invalid_type_rows_removed']}")
     print(f"Text entries standardized: {report['standardized_text_entries']}")
-    print(f"Outliers capped: {report['outliers_capped']}")
+    print(f"Outliers flagged: {report['outliers_flagged']}")
 
 
 def parse_args() -> argparse.Namespace:

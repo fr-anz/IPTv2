@@ -37,7 +37,7 @@ The objectives of this project are:
 - To handle missing values, duplicates, invalid records, inconsistent text values, and outliers.
 - To create additional analytics fields such as month, quarter, signed amount, amount band, and outlier flag.
 - To compute descriptive statistics and financial metrics.
-- To compute advanced validation metrics such as positive-savings months, category concentration, flagged transaction rate, and outlier sensitivity.
+- To compute advanced validation metrics such as positive-savings months, category concentration, and flagged transaction rate.
 - To generate charts for category, trend, share, distribution, and payment method analysis.
 - To present results in a Flask web dashboard.
 - To provide findings and recommendations based on the analyzed data.
@@ -59,12 +59,11 @@ The dataset used in this project is a personal finance transaction dataset. It c
 
 ### Cleaned Dataset Attributes
 
-After preprocessing, the dataset contains 1,494 rows and 15 attributes. Additional fields were added for analysis:
+After preprocessing, the dataset contains 1,494 rows and 14 attributes. Additional fields were added for analysis:
 
 | Attribute | Description |
 | --- | --- |
-| amount_cleaned | Numeric amount after parsing and outlier capping. |
-| is_outlier | Indicates whether the original amount exceeded the outlier threshold. |
+| is_outlier | Indicates whether the amount exceeded the IQR threshold for its transaction type. |
 | year | Transaction year. |
 | month | Transaction month number. |
 | month_name | Transaction month name. |
@@ -75,11 +74,11 @@ After preprocessing, the dataset contains 1,494 rows and 15 attributes. Addition
 
 ## 6. Methodology
 
-The project followed a data analytics workflow using Python. First, the system loaded the raw CSV file and checked that the required columns were available. Next, the dataset was cleaned by handling missing values, converting dates and amounts, removing invalid records, standardizing text fields, removing duplicates, and capping outliers.
+The project followed a data analytics workflow using Python. First, the system loaded the raw CSV file and checked that the required columns were available. Next, the dataset was cleaned by handling missing values, converting dates and amounts, removing invalid records, standardizing text fields, and removing duplicates. Unusually large values were flagged within income and expense records separately, but validated amounts were not modified.
 
 After cleaning, the system engineered new columns to support analysis. These included time-based fields for monthly and quarterly grouping, a signed amount field for net savings analysis, an outlier flag, and transaction amount bands.
 
-The cleaned dataset was then analyzed using descriptive statistics, category summaries, monthly summaries, payment method summaries, outlier sensitivity checks, semantic category auditing, and financial metrics. Finally, the results were displayed in a Flask dashboard with Plotly visualizations, summary tables, data preview, generated insights, and cleaned CSV export.
+The cleaned dataset was then analyzed using descriptive statistics, category summaries, monthly summaries, payment method summaries, an outlier audit, semantic category auditing, and financial metrics. Finally, the results were displayed in a Flask dashboard with Plotly visualizations, summary tables, data preview, generated insights, and cleaned CSV export.
 
 ## 7. Data Cleaning Process
 
@@ -94,7 +93,7 @@ The raw dataset contained realistic data quality issues that needed to be fixed 
 - Converted amount values into numeric format after removing formatting characters such as currency symbols and commas.
 - Removed invalid, missing, zero, and negative amount values.
 - Removed records with invalid transaction types.
-- Capped high outlier amounts using the interquartile range method.
+- Flagged high outlier amounts using separate interquartile-range thresholds for income and expense records without changing their values.
 - Added engineered columns for analysis.
 
 ### Cleaning Summary
@@ -104,13 +103,13 @@ The raw dataset contained realistic data quality issues that needed to be fixed 
 | Original rows | 1,505 |
 | Cleaned rows | 1,494 |
 | Removed rows | 11 |
-| Missing values filled | 16 |
+| Missing values filled | 2 |
 | Duplicate rows removed | 5 |
 | Invalid amount rows removed | 3 |
 | Invalid date rows removed | 2 |
 | Invalid transaction type rows removed | 1 |
-| Standardized text entries | 30 |
-| Outliers capped | 88 |
+| Standardized text entries | 5 |
+| Outliers flagged | 6 |
 
 ## 8. Data Analysis and Computations
 
@@ -121,68 +120,73 @@ The cleaned dataset was analyzed to compute financial totals, transaction statis
 | Metric | Value |
 | --- | ---: |
 | Total transactions | 1,494 |
-| Total income | 666,419.92 |
-| Total expenses | 1,222,101.20 |
-| Net savings | -555,681.28 |
-| Savings rate | -83.38% |
-| Average transaction | 1,264.07 |
-| Median transaction | 1,157.37 |
-| Largest transaction | 3,342.01 |
+| Total income | 1,059,279.52 |
+| Total expenses | 820,414.15 |
+| Net savings | 238,865.37 |
+| Savings rate | 22.55% |
+| Average transaction | 1,258.16 |
+| Median transaction | 953.08 |
+| Largest transaction | 4,345.50 |
 
 ### Descriptive Statistics
 
 | Metric | Value |
 | --- | ---: |
-| Mean | 1,264.07 |
-| Median | 1,157.37 |
-| Mode | 3,342.01 |
-| Standard deviation | 851.74 |
-| Minimum | 14.37 |
-| Maximum | 3,342.01 |
+| Mean | 1,258.16 |
+| Median | 953.08 |
+| Mode | 1,367.57 |
+| Standard deviation | 1,059.60 |
+| Minimum | 92.58 |
+| Maximum | 4,345.50 |
 
 ### Top Expense Categories
 
 | Category | Total Amount | Transaction Count | Share of Expenses |
 | --- | ---: | ---: | ---: |
-| Travel | 167,905.62 | 158 | 13.74% |
-| Rent | 162,075.39 | 165 | 13.26% |
-| Food & Drink | 159,820.00 | 149 | 13.08% |
-| Entertainment | 148,141.88 | 142 | 12.12% |
-| Salary | 147,997.42 | 145 | 12.11% |
+| Travel | 220,293.70 | 158 | 26.85% |
+| Rent | 210,387.81 | 165 | 25.64% |
+| Entertainment | 80,864.31 | 142 | 9.86% |
+| Food & Drink | 73,075.51 | 149 | 8.91% |
+| Utilities | 65,936.86 | 156 | 8.04% |
 
 ### Top Expense Payment Methods
 
 | Payment Method | Total Amount | Transaction Count | Share of Expenses |
 | --- | ---: | ---: | ---: |
-| Credit Card | 295,054.95 | 293 | 24.14% |
-| Debit Card | 286,833.48 | 282 | 23.47% |
-| Bank Transfer | 270,248.82 | 282 | 22.11% |
-| E-Wallet | 242,901.26 | 231 | 19.88% |
-| Cash | 117,555.35 | 118 | 9.62% |
+| Credit Card | 284,266.18 | 262 | 34.65% |
+| Bank Transfer | 276,324.67 | 321 | 33.68% |
+| Debit Card | 156,801.04 | 274 | 19.11% |
+| E-Wallet | 80,346.08 | 141 | 9.79% |
+| Cash | 22,157.95 | 71 | 2.70% |
+| Unknown | 518.23 | 1 | 0.06% |
 
 ### Advanced Validation Metrics
 
 | Metric | Value |
 | --- | ---: |
-| Monthly net cash-flow variance | 60,378,473.53 |
-| Monthly net cash-flow standard deviation | 7,770.36 |
-| Positive savings months | 6 of 60 |
-| Positive savings month share | 10.00% |
-| Top three category concentration | 40.08% |
-| Flagged transaction rate | 5.89% |
-| Expense mean-median gap | 11.36 |
+| Monthly net cash-flow variance | 61,183,537.73 |
+| Monthly net cash-flow standard deviation | 7,821.99 |
+| Positive savings months | 36 of 60 |
+| Positive savings month share | 60.00% |
+| Top three category concentration | 62.35% |
+| Flagged transaction rate | 0.40% |
+| Expense mean-median gap | 132.07 |
 
-### Outlier Sensitivity
+### Outlier Audit
 
-The system keeps both the parsed amount and the capped cleaned amount, allowing the dashboard to compare totals before and after outlier treatment.
+The system applies the IQR rule separately to income and expense records. It flags unusual values for review while preserving every validated transaction amount for financial calculations.
 
-| Metric | Before Capping | After Capping | Change |
-| --- | ---: | ---: | ---: |
-| Income | 735,593.04 | 666,419.92 | -69,173.12 |
-| Expenses | 1,222,101.20 | 1,222,101.20 | 0.00 |
-| Net savings | -486,508.16 | -555,681.28 | -69,173.12 |
+| Metric | Value |
+| --- | ---: |
+| Flagged transactions | 6 |
+| Flagged transaction rate | 0.40% |
+| Flagged income transactions | 0 |
+| Flagged expense transactions | 6 |
+| Flagged total amount | 15,269.81 |
+| Largest flagged amount | 2,913.06 |
+| Top flagged category | Travel |
 
-The outlier sensitivity check shows that 88 transactions were capped, equal to 5.89% of cleaned records.
+The audit identifies unusual transactions without treating them as errors or changing totals. Each flagged record should be reviewed in context before any correction is made.
 
 ## 9. Visualizations
 
@@ -208,42 +212,41 @@ This chart shows how transaction amounts are distributed. It helps reveal whethe
 
 This chart compares expense totals across payment methods. It helps identify whether spending is mostly done through credit card, debit card, bank transfer, e-wallet, cash, or unknown payment methods.
 
-The dashboard also includes supporting tables for statistical computations, top expense categories, monthly summaries, payment methods, cleaning results, advanced validation metrics, outlier sensitivity, semantic category audit, and a cleaned data preview.
+The dashboard also includes supporting tables for statistical computations, top expense categories, monthly summaries, payment methods, cleaning results, advanced validation metrics, an outlier audit, semantic category audit, and a cleaned data preview.
 
 ## 10. Findings and Insights
 
 The analysis produced several important findings:
 
 - The cleaned dataset contains 1,494 valid transaction records after removing duplicates and invalid rows.
-- Total expenses are higher than total income, resulting in negative net savings of -555,681.28.
-- The savings rate is -83.38%, showing that expenses exceeded income during the dataset period.
-- Expenses are concentrated in Travel, which accounts for 13.74% of total expenses.
-- The highest spending month is August 2020, with 31,937.82 in expenses.
-- The dataset contains 1,215 expense records and 279 income records, meaning expenses have more transaction-level detail than income.
-- Credit Card is the highest expense payment method, representing 24.14% of spending.
-- Only 6 of 60 months, or 10.00%, show positive savings.
-- The top three expense categories represent 40.08% of total expenses.
-- Salary appears as an expense category in 145 records totaling 147,997.42, while Salary income records total 0. This is treated as a dataset semantic issue and is reported as-is rather than silently recoded.
+- Total income exceeds total expenses, resulting in net savings of 238,865.37.
+- The savings rate is 22.55% across the full dataset period.
+- Travel is the largest expense category, accounting for 26.85% of total expenses.
+- The highest spending month is January 2023, with 23,267.92 in expenses.
+- The dataset contains 1,070 expense records and 424 income records.
+- Credit Card is the highest expense payment method, representing 34.65% of spending.
+- 36 of 60 months, or 60.00%, show positive savings.
+- The top three expense categories represent 62.35% of total expenses.
+- Six expense transactions are flagged for review; their original values remain unchanged in all calculations.
 
-These findings show that the user has a high expense load compared with income. The dashboard also shows that expenses are spread across several major categories, with Travel, Rent, Food & Drink, Entertainment, and Salary-related records appearing among the largest totals.
+These findings show positive aggregate savings alongside substantial month-to-month variation. Expenses are concentrated primarily in Travel and Rent, so those categories have the greatest influence on overall spending.
 
 ## 11. Conclusion
 
 The Personal Finance Analytics System successfully transforms raw transaction records into a cleaned and analytics-ready dataset. The system handles common data quality issues, computes financial metrics, creates useful visualizations, and presents insights through a web dashboard.
 
-Based on the analysis, the dataset shows that total expenses are greater than total income, resulting in negative net savings. This indicates that financial monitoring and budget planning are necessary. The project demonstrates how Python, pandas, Plotly, and Flask can be used together to build a practical data analytics system for personal finance decision-making. The results should still be interpreted as descriptive findings from the available dataset, especially because some category labels, such as Salary, require semantic review before making final behavioral conclusions.
+Based on the analysis, total income is greater than total expenses, resulting in positive net savings across the full period, although 24 individual months have negative net savings. The project demonstrates how Python, pandas, Plotly, and Flask can be used together to build a practical data analytics system for personal finance decision-making. Results remain descriptive findings from the available dataset, and flagged transactions require contextual review rather than automatic modification.
 
 ## 12. Recommendations
 
 The following recommendations are based on the analysis:
 
 - Set budget limits for high-spending categories, especially Travel, Rent, Food & Drink, and Entertainment.
-- Review months with unusually high expenses, such as August 2020, to identify what caused the increase.
+- Review months with unusually high expenses, especially January 2023, to identify what caused the increase.
 - Monitor credit card spending closely because it is the highest expense payment method.
-- Establish a monthly savings target to improve the negative savings rate.
+- Maintain a monthly savings target and investigate the 24 months with negative net savings.
 - Continue cleaning and validating transaction data before performing analysis.
 - Review outlier transactions regularly to determine whether they are valid large expenses or data entry issues.
-- Review and correct ambiguous category labels, especially Salary records marked as expenses.
 - Use the dashboard regularly to compare income, expenses, and savings trends over time.
 
 ## 13. References
