@@ -304,8 +304,12 @@ def build_dashboard_analysis_results(
         }
 
     amount_band = "Unknown"
+    amount_band_count = 0
+    amount_band_share = 0.0
     if "amount_band" in data and not data.empty and not data["amount_band"].dropna().empty:
         amount_band = str(data["amount_band"].mode().iloc[0])
+        amount_band_count = int(data["amount_band"].eq(amount_band).sum())
+        amount_band_share = round(amount_band_count / len(data) * 100, 2)
 
     return {
         "metrics": metrics,
@@ -324,6 +328,8 @@ def build_dashboard_analysis_results(
         "outlier_count": outlier_audit["flagged_transactions"],
         "outlier_rate": outlier_audit["outlier_transaction_rate"],
         "amount_band": amount_band,
+        "amount_band_count": amount_band_count,
+        "amount_band_share": amount_band_share,
         "income_count": int(data["transaction_type"].eq("Income").sum()),
         "expense_count": int(data["transaction_type"].eq("Expense").sum()),
     }
@@ -373,14 +379,16 @@ def generate_key_insights(analysis_results: AnalysisResults) -> list[str]:
 
     if dominant_payment_method:
         insights.append(
-            f"{dominant_payment_method['name']} is the dominant expense payment method, "
+            f"{dominant_payment_method['name']} has the highest expense total, "
             f"representing {dominant_payment_method['share']:,.2f}% of total expenses. "
             "This indicates that payment-method behavior is relevant when reviewing how "
             "spending is distributed across categories."
         )
 
     insights.append(
-        f"Most transactions fall within the {analysis_results['amount_band']} amount band, "
+        f"The {analysis_results['amount_band']} amount band is the largest, containing "
+        f"{analysis_results['amount_band_count']} transaction(s) "
+        f"({analysis_results['amount_band_share']:,.2f}% of cleaned records), "
         f"and {analysis_results['outlier_count']} transaction(s) were flagged as outliers "
         f"({analysis_results['outlier_rate']:,.2f}% of cleaned records). The dataset also "
         f"contains {analysis_results['expense_count']} expense records and "
@@ -401,9 +409,9 @@ def generate_recommendations(analysis_results: AnalysisResults) -> list[str]:
         (
             "Keep a close eye on your monthly cash flow, especially in months where "
             "your expenses are higher than your income. Use the monthly trend chart to "
-            "figure out whether those shortfalls come from regular bills, seasonal "
-            "spending spikes, or one-time big purchases, that way, you know exactly "
-            "where to make adjustments."
+            "figure out whether those shortfalls come from income timing, regular bills, "
+            "seasonal spending spikes, or one-time big purchases. That distinction shows "
+            "where an adjustment may be useful."
         ),
         (
             "Start with your biggest spending categories before worrying about the "
@@ -434,8 +442,8 @@ def generate_recommendations(analysis_results: AnalysisResults) -> list[str]:
 
     if dominant_payment_method:
         recommendations.append(
-            f"Since {dominant_payment_method['name']} is your most-used payment "
-            "method, try grouping those transactions by category. This will quickly "
+            f"Since {dominant_payment_method['name']} has the highest expense total, "
+            "try grouping those transactions by category. This will quickly "
             "show you whether most of that spending goes toward essentials, "
             "discretionary items, or a mix of both, and whether a monthly "
             "spending cap on this method would be helpful."
@@ -444,9 +452,9 @@ def generate_recommendations(analysis_results: AnalysisResults) -> list[str]:
     if analysis_results["outlier_count"]:
         recommendations.append(
             "Before drawing any final conclusions from your data, review the "
-            "transactions that were flagged as unusually large. Some of them may "
-            "be legitimate big purchases, but others could be data entry errors "
-            "or duplicates that are inflating your expense totals."
+            "transactions that were flagged as unusually large. The flag identifies "
+            "values for contextual review; it does not establish that a transaction "
+            "is erroneous, and the original amounts remain in the financial totals."
         )
 
     if metrics["net_savings"] < 0:
@@ -530,7 +538,8 @@ def generate_chart_summaries(analysis_results: AnalysisResults) -> dict[str, dic
                 f"{analysis_results['negative_net_savings_months']} months in the "
                 "negative, it is worth going back and identifying whether those "
                 "shortfalls were caused by fixed recurring bills, a seasonal spike, "
-                "or a one-time large expense, each has a different solution. "
+                "a one-time large expense, or the timing of income, since each has a "
+                "different solution. "
                 "Setting a monthly savings goal will also give you a clear target "
                 "to compare your actual results against each period."
             ),
@@ -556,18 +565,19 @@ def generate_chart_summaries(analysis_results: AnalysisResults) -> dict[str, dic
         },
         "transaction_amount_distribution": {
             "key_insight": (
-                f"Most transactions fall within the {analysis_results['amount_band']} amount "
-                f"band, and {analysis_results['outlier_count']} transaction(s) were flagged "
+                f"The {analysis_results['amount_band']} amount band is the largest, with "
+                f"{analysis_results['amount_band_count']} transaction(s) "
+                f"({analysis_results['amount_band_share']:,.2f}% of cleaned records), and "
+                f"{analysis_results['outlier_count']} transaction(s) were flagged "
                 f"as outliers ({analysis_results['outlier_rate']:,.2f}% of cleaned records)."
             ),
             "recommendation": (
                 f"Before finalizing any conclusions, take a moment to review the "
                 f"{analysis_results['outlier_count']} transaction(s) that were "
-                "flagged as unusually large. They could be legitimate big-ticket "
-                "expenses, but they might also be data entry errors or "
-                "duplicates. Verifying these will ensure that your total expenses "
-                "and average spending figures truly reflect your normal "
-                "day-to-day financial behavior."
+                "flagged as unusually large. Review them in context before deciding "
+                "whether any correction is necessary. An outlier flag alone does not "
+                "mean a transaction is invalid, and all validated amounts remain "
+                "unchanged in the financial totals."
             ),
             "conclusion": _amount_distribution_conclusion(analysis_results),
         },
@@ -659,12 +669,12 @@ def _monthly_trend_conclusion(analysis_results: AnalysisResults) -> str:
         "Looking at the monthly trend, it is clear that cash flow shifts "
         f"noticeably from one period to the next. {savings_phrase} "
         f"{analysis_results['negative_net_savings_months']} month(s) ended with "
-        "expenses exceeding income which is a sign that spending is not fully consistent "
-        "throughout the year. "
+        "expenses exceeding income. These monthly shortfalls can reflect expense levels, "
+        "income timing, or both. "
         f"{peak_phrase}This tells us that financial performance fluctuates and "
         "that some months require more careful attention than others. Regular "
-        "monthly check-ins would make it much easier to catch overspending "
-        "early before it compounds."
+        "monthly check-ins would make it easier to identify the source of each "
+        "shortfall and plan for similar periods."
     )
 
 
@@ -697,14 +707,14 @@ def _expense_share_conclusion(analysis_results: AnalysisResults) -> str:
 
 def _amount_distribution_conclusion(analysis_results: AnalysisResults) -> str:
     return (
-        "The transaction amount distribution shows that the majority of "
-        f"transactions cluster within the {analysis_results['amount_band']} "
-        "range, which represents the typical day-to-day spending pattern. "
+        "The transaction amount distribution shows that the largest band is "
+        f"{analysis_results['amount_band']}, containing "
+        f"{analysis_results['amount_band_count']} transaction(s) "
+        f"({analysis_results['amount_band_share']:,.2f}% of cleaned records). "
         f"However, {analysis_results['outlier_count']} transaction(s) were "
-        "identified as unusually large and stand apart from the rest. These "
-        "outliers can skew totals and averages, making spending look higher "
-        "than it normally is. It is a good idea to verify each one before "
-        "drawing any firm conclusions about overall financial behavior."
+        "identified as unusually large under the transaction-type-specific IQR rule. "
+        "A flag does not establish that a value is erroneous, and flagged amounts are "
+        "preserved in all calculations. Review them in context before making corrections."
     )
 
 
@@ -712,7 +722,7 @@ def _payment_method_conclusion(analysis_results: AnalysisResults) -> str:
     dominant_payment_method = analysis_results["dominant_payment_method"]
     return (
         f"The payment method chart shows that {dominant_payment_method['name']} "
-        "is by far the most-used method when it comes to total expense volume, "
+        "has the highest total expense value, "
         f"accounting for {dominant_payment_method['share']:,.2f}% of all "
         "expenses. This means that a significant portion of overall spending "
         f"flows through {dominant_payment_method['name'].lower()} transactions. "
@@ -1032,6 +1042,10 @@ def generate_amount_distribution_insight(data: pd.DataFrame) -> list[Insight]:
         ]
 
     amount_band = data["amount_band"].mode().iloc[0] if "amount_band" in data else "Unknown"
+    amount_band_count = (
+        int(data["amount_band"].eq(amount_band).sum()) if "amount_band" in data else 0
+    )
+    amount_band_share = round(amount_band_count / len(data) * 100, 2)
     outlier_count = int(data["is_outlier"].sum()) if "is_outlier" in data else 0
     if outlier_count:
         interpretation = (
@@ -1049,7 +1063,8 @@ def generate_amount_distribution_insight(data: pd.DataFrame) -> list[Insight]:
             "Transaction Amount Pattern",
             "transaction_amount_distribution",
             (
-                f"Most transactions fall within the {amount_band} amount band, and "
+                f"The {amount_band} amount band is the largest, containing "
+                f"{amount_band_count} transaction(s) ({amount_band_share:,.2f}% of records), and "
                 f"{outlier_count} transaction(s) were flagged as outliers."
             ),
             interpretation,

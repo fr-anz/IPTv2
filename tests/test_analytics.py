@@ -368,6 +368,8 @@ def test_dashboard_summary_groups_dynamic_financial_story():
     analysis_results = build_dashboard_analysis_results(cleaned, calculate_metrics(cleaned))
     summary = generate_dashboard_summary(analysis_results)
 
+    assert analysis_results["amount_band_count"] == 2
+    assert analysis_results["amount_band_share"] == 66.67
     assert len(summary["key_insights"]) >= 4
     assert len(summary["recommendations"]) >= 4
     assert "monthly_trends" in summary["charts"]
@@ -385,6 +387,12 @@ def test_dashboard_summary_groups_dynamic_financial_story():
     assert "review" in summary["charts"]["transaction_amount_distribution"]["recommendation"]
     assert "Rent stands out" in summary["charts"]["top_expense_categories"]["conclusion"]
     assert "Credit Card" in summary["charts"]["payment_method_expenses"]["conclusion"]
+    assert "highest total expense value" in summary["charts"]["payment_method_expenses"]["conclusion"]
+    assert "by far" not in summary["charts"]["payment_method_expenses"]["conclusion"]
+    assert "most-used payment" not in " ".join(summary["recommendations"])
+    assert "largest band is Medium" in summary["charts"]["transaction_amount_distribution"]["conclusion"]
+    assert "66.67%" in summary["charts"]["transaction_amount_distribution"]["conclusion"]
+    assert "income timing" in summary["charts"]["monthly_trends"]["conclusion"]
     assert "descriptive observations based on the current dataset" in summary["conclusion"]
 
 
