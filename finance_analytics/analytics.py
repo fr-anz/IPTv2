@@ -192,6 +192,10 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
         labels={"category": "Category", "total_amount": "Total Expense"},
         color_discrete_sequence=CHART_PALETTE,
     )
+    bar_chart.update_traces(
+        hovertemplate="Category: %{x}<br>Total expense: %{y:,.2f}<extra></extra>"
+    )
+    bar_chart.update_yaxes(tickformat=",.2f")
     bar_chart.update_layout(showlegend=False)
     line_chart = px.line(
         monthly,
@@ -201,12 +205,27 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
         markers=True,
         color_discrete_map=MEASURE_COLORS,
     )
+    for trace in line_chart.data:
+        trace.update(
+            hovertemplate=(
+                f"Measure: {trace.name}<br>Month: %{{x}}"
+                "<br>Amount: %{y:,.2f}<extra></extra>"
+            )
+        )
+    line_chart.update_yaxes(tickformat=",.2f")
     pie_chart = px.pie(
         categories,
         values="total_amount",
         names="category",
         hole=0.56,
         color_discrete_sequence=CHART_PALETTE,
+    )
+    pie_chart.update_traces(
+        texttemplate="%{percent:.2%}",
+        hovertemplate=(
+            "Category: %{label}<br>Total expense: %{value:,.2f}"
+            "<br>Share: %{percent:.2%}<extra></extra>"
+        )
     )
     histogram = px.histogram(
         data,
@@ -216,6 +235,15 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
         nbins=30,
         color_discrete_map=MEASURE_COLORS,
     )
+    for trace in histogram.data:
+        trace.update(
+            hovertemplate=(
+                f"Type: {trace.name}<br>Transaction amount: %{{x:,.2f}}"
+                "<br>Count: %{y:,d}<extra></extra>"
+            )
+        )
+    histogram.update_xaxes(tickformat=",.2f")
+    histogram.update_yaxes(tickformat=",d")
     payment_chart = px.bar(
         payment_methods,
         x="payment_method",
@@ -224,6 +252,10 @@ def build_dashboard_charts(data: pd.DataFrame) -> dict[str, str]:
         labels={"payment_method": "Payment Method", "total_amount": "Total Expense"},
         color_discrete_sequence=CHART_PALETTE,
     )
+    payment_chart.update_traces(
+        hovertemplate="Payment method: %{x}<br>Total expense: %{y:,.2f}<extra></extra>"
+    )
+    payment_chart.update_yaxes(tickformat=",.2f")
     payment_chart.update_layout(showlegend=False)
 
     return {

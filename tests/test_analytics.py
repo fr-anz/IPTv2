@@ -137,6 +137,17 @@ def test_expense_share_chart_includes_every_category():
     charts = build_dashboard_charts(cleaned)
 
     assert "Category 1" in charts["pie_chart"]
+    assert "%{y:,.2f}" in charts["bar_chart"]
+    assert '"tickformat":",.2f"' in charts["bar_chart"]
+    assert "%{y:,.2f}" in charts["line_chart"]
+    assert '"tickformat":",.2f"' in charts["line_chart"]
+    assert "%{value:,.2f}" in charts["pie_chart"]
+    assert '"texttemplate":"%{percent:.2%}"' in charts["pie_chart"]
+    assert "%{x:,.2f}" in charts["histogram"]
+    assert "%{y:,d}" in charts["histogram"]
+    assert '"tickformat":",d"' in charts["histogram"]
+    assert "%{y:,.2f}" in charts["payment_chart"]
+    assert '"tickformat":",.2f"' in charts["payment_chart"]
 
 
 def test_extended_analysis_metrics_are_computed():
