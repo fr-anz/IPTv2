@@ -31,7 +31,6 @@ def main() -> None:
     print(f"Original rows: {report['original_rows']}")
     print(f"Cleaned rows: {report['cleaned_rows']}")
     print(f"Rows removed: {report['removed_rows']}")
-    print(f"Missing values filled: {report['missing_values_filled']}")
     print(f"Duplicates removed: {report['duplicates_removed']}")
     print(f"Invalid amounts removed: {report['invalid_amount_rows_removed']}")
     print(f"Invalid dates removed: {report['invalid_date_rows_removed']}")
