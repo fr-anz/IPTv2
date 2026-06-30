@@ -93,12 +93,6 @@ python -m pytest
 `-- docs/                      # Data audit and project paper material
 ```
 
-## Documentation
-
-- [Data dictionary and dataset audit](docs/data-dictionary-and-audit.md)
-- [Final paper](docs/final-paper.md)
-- [Final paper outline](docs/final-paper-outline.md)
-
 ## Notes
 
 - Generated files under `data/processed/` are not committed to the repository.
